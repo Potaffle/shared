@@ -18,7 +18,14 @@ export interface OrderLine {
 }
 
 export interface Order {
+  /** Database id (uuid). The key for every lookup and update; num is only for display. */
+  id: string;
+  /** Number shown to customers and staff. Restarts at 1 every business day, so it is NOT unique over time. */
   num: number;
+  /** Permanent running number, never reset (receipts, history). */
+  seq: number;
+  /** Business day the order belongs to, YYYY-MM-DD, stamped by the database at creation. */
+  dayKey: string;
   /** ISO timestamp. */
   createdAt: string;
   lines: OrderLine[];
@@ -50,7 +57,38 @@ export const fmtTime = (iso: string) => {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-export const nextOrderNum = (orders: Order[]) => (orders.length ? Math.max(...orders.map((o) => o.num)) + 1 : 1001);
+/** Mock stores only: the database assigns num, seq and dayKey. */
+export const nextOrderNum = (orders: Order[]) => (orders.length ? Math.max(...orders.map((o) => o.num)) + 1 : 1);
+
+/**
+ * Business day rule, mirrored from public.business_day in the database: a day runs from `start` to the same
+ * time next day in `tz`. Defaults match the settings rows `business_day_start` and `timezone`; read those
+ * from the `settings` table when available so a changed setting applies everywhere.
+ */
+export const BUSINESS_DAY_START = '05:00';
+export const BUSINESS_TIMEZONE = 'Asia/Amman';
+
+/** Business day (YYYY-MM-DD) an instant belongs to. */
+export function businessDay(at: string | Date, start = BUSINESS_DAY_START, tz = BUSINESS_TIMEZONE): string {
+  const d = typeof at === 'string' ? new Date(at) : at;
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(d);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const [sh, sm] = start.split(':').map(Number);
+  const localMinutes = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute')) - (sh * 60 + sm) * 60_000;
+  return new Date(localMinutes).toISOString().slice(0, 10);
+}
+/** Today's business day. */
+export const todayBusinessDay = (start?: string, tz?: string) => businessDay(new Date(), start, tz);
+/** Orders belonging to the current business day. */
+export const isToday = (o: Pick<Order, 'dayKey'>, start?: string, tz?: string) => o.dayKey === todayBusinessDay(start, tz);
 
 export const PHONE_PREFIX = '+962';
 const digitsOnly = (v: string) => v.replace(/\D/g, '');

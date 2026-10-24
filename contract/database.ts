@@ -173,6 +173,21 @@ export type Database = {
         }
         Relationships: []
       }
+      order_day_counters: {
+        Row: {
+          day_key: string
+          last_num: number
+        }
+        Insert: {
+          day_key: string
+          last_num: number
+        }
+        Update: {
+          day_key?: string
+          last_num?: number
+        }
+        Relationships: []
+      }
       order_lines: {
         Row: {
           id: string
@@ -265,11 +280,13 @@ export type Database = {
           completed_at: string | null
           created_at: string
           customer_id: string | null
+          day_key: string
           id: string
           num: number
           paid_at: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
+          seq: number
           source: Database["public"]["Enums"]["order_source"]
           status: Database["public"]["Enums"]["order_status"]
           total: number
@@ -280,11 +297,13 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
+          day_key: string
           id?: string
-          num?: number
+          num: number
           paid_at?: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
+          seq: number
           source: Database["public"]["Enums"]["order_source"]
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
@@ -295,11 +314,13 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
+          day_key?: string
           id?: string
           num?: number
           paid_at?: string | null
           pay?: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
+          seq?: number
           source?: Database["public"]["Enums"]["order_source"]
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
@@ -357,7 +378,8 @@ export type Database = {
     }
     Functions: {
       auth_role: { Args: never; Returns: string }
-      get_order: { Args: { p_num: number }; Returns: Json }
+      business_day: { Args: { ts?: string }; Returns: string }
+      get_order: { Args: { p_id: string }; Returns: Json }
       insert_order: {
         Args: { p_lines: Json; p_order: Json }
         Returns: {
@@ -365,11 +387,13 @@ export type Database = {
           completed_at: string | null
           created_at: string
           customer_id: string | null
+          day_key: string
           id: string
           num: number
           paid_at: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
+          seq: number
           source: Database["public"]["Enums"]["order_source"]
           status: Database["public"]["Enums"]["order_status"]
           total: number
