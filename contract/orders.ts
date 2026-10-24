@@ -53,8 +53,26 @@ export const fmtTime = (iso: string) => {
 export const nextOrderNum = (orders: Order[]) => (orders.length ? Math.max(...orders.map((o) => o.num)) + 1 : 1001);
 
 export const PHONE_PREFIX = '+962';
-export const toPhone = (local: string): string | null => {
-  const t = local.trim();
-  return t ? `${PHONE_PREFIX} ${t}` : null;
+const digitsOnly = (v: string) => v.replace(/\D/g, '');
+
+/** Local part of a Jordanian mobile: 7 followed by 7, 8 or 9, then 7 digits (accepts a leading 0 or the +962 prefix). */
+export const normaliseLocalPhone = (v: string): string => {
+  let d = digitsOnly(v);
+  if (d.startsWith('962')) d = d.slice(3);
+  if (d.startsWith('0')) d = d.slice(1);
+  return d;
 };
-export const fromPhone = (phone: string | null) => (phone ?? '').replace(PHONE_PREFIX, '').trim();
+export const isValidJordanMobile = (local: string) => /^7[789]\d{7}$/.test(local);
+
+/** Stored form: E.164 without spaces, e.g. +962791234567. Empty input gives null. */
+export const toPhone = (local: string): string | null => {
+  const d = normaliseLocalPhone(local);
+  return d ? `${PHONE_PREFIX}${d}` : null;
+};
+/** Local digits for editing (no prefix). Accepts stored values with or without spaces. */
+export const fromPhone = (phone: string | null) => (phone ? normaliseLocalPhone(phone) : '');
+/** Display form: +962 79 123 4567. */
+export const fmtPhone = (phone: string) => {
+  const d = normaliseLocalPhone(phone);
+  return d.length === 9 ? `${PHONE_PREFIX} ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}` : phone;
+};
