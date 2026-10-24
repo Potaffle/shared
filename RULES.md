@@ -4,7 +4,7 @@ These rules apply in all Potaffle repositories. Each repo's `CLAUDE.md` imports 
 
 ## 1. Scope of edits
 
-- A session edits only its own repository folder (for example `~/Desktop/potaffle/backend/`). Everything else on the machine is read-only, including the sibling repos, which may be read for context.
+- A session edits only its own repository folder, meaning the folder it was opened in, wherever that is on the machine. Everything else is read-only. Sibling Potaffle repos may be read for context when they happen to be checked out nearby; otherwise read them on GitHub (`gh repo view Potaffle/<repo>` or `gh api repos/Potaffle/<repo>/contents/<path>`).
 - The `shared/` submodule inside a repo counts as inside that repo: a session may change files in it, commit inside `shared/`, push, then commit the submodule pointer bump in its own repo.
 - Any other change outside the folder needs a written proposal (which files, what change, why) and is applied only after Yazeed replies with the explicit token `fsign`. Agreement in other words is not enough.
 
@@ -17,7 +17,7 @@ These rules apply in all Potaffle repositories. Each repo's `CLAUDE.md` imports 
 
 ## 3. Shared repo
 
-- The shared repo exists only as the `shared/` submodule inside each app repo. There is no separate workspace-level clone; the workspace folder (`~/Desktop/potaffle/`) is just a folder holding the repos.
+- The shared repo exists only as the `shared/` submodule inside each app repo. Every repo is self-contained: clone it alone with `--recurse-submodules` and a session can work there. No fixed workspace folder or sibling layout is required.
 
 - `shared/contract/` is the single source of truth for the data types (orders, lines, menu, stock). Import from the submodule; do not keep private copies.
 - `shared/brand/` holds logos, fonts and icons. Copy into `public/` at build time or reference directly; do not fork them.
