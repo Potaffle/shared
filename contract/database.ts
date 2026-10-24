@@ -66,6 +66,48 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_daily_stats: {
+        Row: {
+          day: string
+          drinks: number | null
+          fries: number | null
+          imported_at: string
+          notes: string | null
+          orders: number | null
+          revenue: number | null
+          sauces: number | null
+          source: string
+          student_offers: number | null
+          waffles: number | null
+        }
+        Insert: {
+          day: string
+          drinks?: number | null
+          fries?: number | null
+          imported_at?: string
+          notes?: string | null
+          orders?: number | null
+          revenue?: number | null
+          sauces?: number | null
+          source: string
+          student_offers?: number | null
+          waffles?: number | null
+        }
+        Update: {
+          day?: string
+          drinks?: number | null
+          fries?: number | null
+          imported_at?: string
+          notes?: string | null
+          orders?: number | null
+          revenue?: number | null
+          sauces?: number | null
+          source?: string
+          student_offers?: number | null
+          waffles?: number | null
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           id: string
@@ -374,7 +416,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      daily_stats: {
+        Row: {
+          day: string | null
+          drinks: number | null
+          fries: number | null
+          notes: string | null
+          orders: number | null
+          revenue: number | null
+          sauces: number | null
+          source: string | null
+          student_offers: number | null
+          waffles: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       auth_role: { Args: never; Returns: string }
