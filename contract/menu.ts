@@ -1,5 +1,37 @@
 /** Menu, pricing and stock keys. Single source of truth for what can be ordered. */
 
+/* ---------- Languages and menu translations ---------- */
+
+/** UI languages of the apps. */
+export type Lang = 'EN' | 'AR' | 'DE';
+export const LANGS: Lang[] = ['EN', 'AR', 'DE'];
+export const isRtl = (lang: Lang) => lang === 'AR';
+/** Key used in the database's `translations` jsonb: lowercase language code; English has no key (it is the canonical column). */
+export const langKey = (lang: Lang) => lang.toLowerCase();
+
+/** Fields a menu row can translate. Items have all four; modifiers and categories only `name`. */
+export type TranslatedField = 'name' | 'line_name' | 'description' | 'blurb';
+/**
+ * Shape of the `translations` column on menu_items, menu_modifiers and menu_categories:
+ * `{ ar: { name, line_name?, description?, blurb? }, de: { ... } }`. Every key is optional and a missing
+ * one means "show the English". Keyed by an open string so a new language needs no schema change.
+ */
+export type Translations = Record<string, Partial<Record<TranslatedField, string>> | undefined>;
+
+/**
+ * Display text of a menu row in a language: the translation when present and non-empty, else the English
+ * `fallback` (the row's own column). English order-line snapshots stay the keys for everything.
+ */
+export function tr(translations: Translations | null | undefined, lang: Lang, field: TranslatedField, fallback: string): string;
+export function tr(translations: Translations | null | undefined, lang: Lang, field: TranslatedField, fallback: string | null): string | null;
+export function tr(translations: Translations | null | undefined, lang: Lang, field: TranslatedField, fallback: string | null): string | null {
+  if (lang === 'EN' || !translations) return fallback;
+  const v = translations[langKey(lang)]?.[field];
+  return typeof v === 'string' && v.trim() ? v : fallback;
+}
+
+/* ---------- Catalog ---------- */
+
 export type Category = 'main' | 'offers' | 'sauces' | 'drinks';
 export const CATEGORIES: Category[] = ['main', 'offers', 'sauces', 'drinks'];
 

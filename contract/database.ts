@@ -114,18 +114,21 @@ export type Database = {
           name: string
           slug: string
           sort: number
+          translations: Json
         }
         Insert: {
           id?: string
           name: string
           slug: string
           sort?: number
+          translations?: Json
         }
         Update: {
           id?: string
           name?: string
           slug?: string
           sort?: number
+          translations?: Json
         }
         Relationships: []
       }
@@ -179,6 +182,7 @@ export type Database = {
       menu_items: {
         Row: {
           active: boolean
+          blurb: string | null
           category_id: string
           config: Database["public"]["Enums"]["menu_config"]
           description: string | null
@@ -191,9 +195,11 @@ export type Database = {
           slug: string
           sort: number
           stock_key: string
+          translations: Json
         }
         Insert: {
           active?: boolean
+          blurb?: string | null
           category_id: string
           config?: Database["public"]["Enums"]["menu_config"]
           description?: string | null
@@ -206,9 +212,11 @@ export type Database = {
           slug: string
           sort?: number
           stock_key: string
+          translations?: Json
         }
         Update: {
           active?: boolean
+          blurb?: string | null
           category_id?: string
           config?: Database["public"]["Enums"]["menu_config"]
           description?: string | null
@@ -221,6 +229,7 @@ export type Database = {
           slug?: string
           sort?: number
           stock_key?: string
+          translations?: Json
         }
         Relationships: [
           {
@@ -241,6 +250,7 @@ export type Database = {
           price: number
           sort: number
           stock_key: string
+          translations: Json
         }
         Insert: {
           active?: boolean
@@ -250,6 +260,7 @@ export type Database = {
           price?: number
           sort?: number
           stock_key?: string
+          translations?: Json
         }
         Update: {
           active?: boolean
@@ -259,6 +270,7 @@ export type Database = {
           price?: number
           sort?: number
           stock_key?: string
+          translations?: Json
         }
         Relationships: []
       }
