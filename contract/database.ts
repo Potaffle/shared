@@ -129,6 +129,53 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_item_components: {
+        Row: {
+          component_id: string
+          item_id: string
+          qty: number
+        }
+        Insert: {
+          component_id: string
+          item_id: string
+          qty?: number
+        }
+        Update: {
+          component_id?: string
+          item_id?: string
+          qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_components_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "menu_item_components_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_components_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "menu_item_components_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           active: boolean
@@ -232,6 +279,7 @@ export type Database = {
       }
       order_lines: {
         Row: {
+          components: Json
           id: string
           kind: string
           menu_item_id: string | null
@@ -243,6 +291,7 @@ export type Database = {
           unit: number
         }
         Insert: {
+          components?: Json
           id?: string
           kind: string
           menu_item_id?: string | null
@@ -254,6 +303,7 @@ export type Database = {
           unit: number
         }
         Update: {
+          components?: Json
           id?: string
           kind?: string
           menu_item_id?: string | null
@@ -265,6 +315,13 @@ export type Database = {
           unit?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
           {
             foreignKeyName: "order_lines_menu_item_id_fkey"
             columns: ["menu_item_id"]
@@ -431,10 +488,28 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_availability: {
+        Row: {
+          active: boolean | null
+          component_out: boolean | null
+          item_id: string | null
+          kind: string | null
+          out: boolean | null
+          out_components: string[] | null
+          own_out: boolean | null
+          slug: string | null
+          stock_key: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       auth_role: { Args: never; Returns: string }
       business_day: { Args: { ts?: string }; Returns: string }
+      components_count: {
+        Args: { p_components: Json; p_kinds: string[] }
+        Returns: number
+      }
       get_order: { Args: { p_id: string }; Returns: Json }
       insert_order: {
         Args: { p_lines: Json; p_order: Json }
@@ -464,6 +539,10 @@ export type Database = {
       }
       is_owner: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      line_components: {
+        Args: { p_kind: string; p_menu_item_id: string }
+        Returns: Json
+      }
       set_user_role: {
         Args: { p_email: string; p_role: string }
         Returns: undefined

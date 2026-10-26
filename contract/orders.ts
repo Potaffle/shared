@@ -15,6 +15,12 @@ export interface OrderLine {
   mods: string[];
   /** Unit price including modifiers. */
   unit: number;
+  /**
+   * What one unit of the line makes, kind -> quantity, snapshotted by the server at order time:
+   * { fries: 1 } for fries, { waffle: 1 } for a Student Offer, { fries: 1, waffle: 1 } for a combo.
+   * Absent only on mock data; countKinds() then falls back to the line's kind.
+   */
+  components?: Record<string, number>;
 }
 
 export interface Order {
@@ -38,8 +44,11 @@ export interface Order {
 
 export const lineTotal = (l: OrderLine) => l.qty * l.unit;
 export const orderTotal = (o: { lines: OrderLine[] }) => o.lines.reduce((s, l) => s + lineTotal(l), 0);
-export const countKinds = (o: Order, kinds: ItemKind[]) =>
-  o.lines.filter((l) => kinds.includes(l.kind)).reduce((s, l) => s + l.qty, 0);
+/** Units of the given kinds that one unit of the line makes (from its components snapshot, else its kind). */
+export const lineMakes = (l: Pick<OrderLine, 'kind' | 'components'>, kinds: ItemKind[]) =>
+  l.components ? kinds.reduce((s, k) => s + (l.components?.[k] ?? 0), 0) : kinds.includes(l.kind) ? 1 : 0;
+export const countKinds = (o: Pick<Order, 'lines'>, kinds: ItemKind[]) =>
+  o.lines.reduce((s, l) => s + l.qty * lineMakes(l, kinds), 0);
 export const countFries = (o: Order) => countKinds(o, FRIES_KINDS);
 export const countWaffles = (o: Order) => countKinds(o, WAFFLE_KINDS);
 
