@@ -34,6 +34,8 @@ export interface Order {
   dayKey: string;
   /** ISO timestamp. */
   createdAt: string;
+  /** ISO timestamp of payment (approval at the counter, or creation for counter orders); null while pending or cancelled. */
+  paidAt: string | null;
   lines: OrderLine[];
   phone: string | null;
   pay: Payment;
@@ -54,6 +56,8 @@ export const countWaffles = (o: Order) => countKinds(o, WAFFLE_KINDS);
 
 /** Orders that count as sold: paid and not cancelled. */
 export const isSold = (o: Order) => o.status === 'approved' || o.status === 'completed';
+/** Sold orders whose payment came in at or after `since` (ISO): the cash taken during the current business day. */
+export const isSoldSince = (o: Order, since: string) => isSold(o) && o.paidAt !== null && o.paidAt >= since;
 
 export const fmtJD = (n: number) => n.toFixed(3);
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -93,6 +97,27 @@ export function businessDay(at: string | Date, start = BUSINESS_DAY_START, tz = 
   const [sh, sm] = start.split(':').map(Number);
   const localMinutes = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute')) - (sh * 60 + sm) * 60_000;
   return new Date(localMinutes).toISOString().slice(0, 10);
+}
+/**
+ * Instant at which a business day starts: `dayKey` at `start` o'clock in `tz`. Found by taking the UTC guess
+ * and correcting it by the zone's offset at that moment (DST-safe for any zone Intl knows).
+ */
+export function businessDayStart(dayKey: string, start = BUSINESS_DAY_START, tz = BUSINESS_TIMEZONE): Date {
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const [hh, mm] = start.split(':').map(Number);
+  const guess = Date.UTC(y, m - 1, d, hh, mm);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(guess));
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const localAsUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'));
+  return new Date(guess - (localAsUtc - guess));
 }
 /** Today's business day. */
 export const todayBusinessDay = (start?: string, tz?: string) => businessDay(new Date(), start, tz);
