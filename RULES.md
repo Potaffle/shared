@@ -13,6 +13,7 @@ These rules apply in all Potaffle repositories. Each repo's `CLAUDE.md` imports 
 - Commit and push on the session's own repo freely, no token needed. Commit after each coherent change with a clear message.
 - Read-only `gh` commands (status, list, view, api GET) are allowed. Any `gh` command that creates or changes something on GitHub (repos, settings, secrets, PRs, releases) needs `fsign` first.
 - Branches: `main` is staging, `production` is prod. Promote by merging `main` into `production`. Never commit directly to `production`.
+- **Never suggest, offer or ask about promoting to production.** Yazeed decides when staging is good enough and will say "promote to production" himself; until then, finish and verify work on staging, report it, and stop. Do not propose deployment set-up, promotion sessions or "ready for prod" follow-ups on your own initiative (instruction from Yazeed, 2026-10-26).
 - Never commit secrets, tokens, passwords or `.env` files. Never paste a secret into chat; if one is pasted, say it is exposed and must be revoked.
 
 ## 3. Shared repo
