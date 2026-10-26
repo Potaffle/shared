@@ -506,6 +506,13 @@ export type Database = {
     Functions: {
       auth_role: { Args: never; Returns: string }
       business_day: { Args: { ts?: string }; Returns: string }
+      close_earlier_days: {
+        Args: never
+        Returns: {
+          cancelled: number
+          completed: number
+        }[]
+      }
       components_count: {
         Args: { p_components: Json; p_kinds: string[] }
         Returns: number
