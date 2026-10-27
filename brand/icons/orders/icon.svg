@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<title>Potaffle Orders</title>
+<rect width="1024" height="1024" fill="#1F1C1C"/>
+<defs>
+<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8A427"/><stop offset="0.24" stop-color="#E8A427"/><stop offset="0.24" stop-color="#FBCC20"/><stop offset="1" stop-color="#FBCC20"/></linearGradient>
+<clipPath id="c"><polygon points="286.7,215.0 737.3,215.0 737.3,749.6 681.0,809.0 624.6,749.6 568.3,809.0 512.0,749.6 455.7,809.0 399.4,749.6 343.0,809.0 286.7,749.6"/></clipPath>
+</defs>
+<g clip-path="url(#c)"><rect x="286.7" y="215.0" width="450.6" height="593.9" rx="42.7" fill="url(#g)"/><rect x="286.7" y="257.7" width="450.6" height="551.3" fill="url(#g)"/></g>
+<rect x="355.0" y="411.3" width="194.7" height="38.4" rx="19.2" fill="#1F1C1C"/>
+<rect x="355.0" y="492.4" width="194.7" height="38.4" rx="19.2" fill="#1F1C1C"/>
+<rect x="355.0" y="573.4" width="125.6" height="38.4" rx="19.2" fill="#1F1C1C"/>
+</svg>
