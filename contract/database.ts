@@ -442,6 +442,13 @@ export type Database = {
             foreignKeyName: "orders_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -485,6 +492,29 @@ export type Database = {
       }
     }
     Views: {
+      customer_stats: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          last_order_at: string | null
+          last_order_day: string | null
+          name: string | null
+          orders: number | null
+          phone: string | null
+          points: number | null
+          spent: number | null
+        }
+        Relationships: []
+      }
+      daily_payments: {
+        Row: {
+          day: string | null
+          orders: number | null
+          pay: Database["public"]["Enums"]["payment_method"] | null
+          revenue: number | null
+        }
+        Relationships: []
+      }
       daily_stats: {
         Row: {
           day: string | null
@@ -500,6 +530,34 @@ export type Database = {
         }
         Relationships: []
       }
+      item_sales: {
+        Row: {
+          category: string | null
+          day: string | null
+          kind: string | null
+          menu_item_id: string | null
+          name: string | null
+          orders: number | null
+          qty: number | null
+          revenue: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_availability: {
         Row: {
           active: boolean | null
@@ -513,6 +571,34 @@ export type Database = {
           stock_key: string | null
         }
         Relationships: []
+      }
+      option_sales: {
+        Row: {
+          day: string | null
+          item_name: string | null
+          kind: string | null
+          menu_item_id: string | null
+          option: string | null
+          paid_qty: number | null
+          placement: string | null
+          qty: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
