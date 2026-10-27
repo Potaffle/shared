@@ -1,4 +1,5 @@
 import { FRIES_KINDS, WAFFLE_KINDS, type ItemKind } from './menu';
+import type { Selection } from './options';
 
 export type OrderStatus = 'pending' | 'approved' | 'completed' | 'cancelled';
 export const STATUSES: OrderStatus[] = ['approved', 'pending', 'completed', 'cancelled'];
@@ -21,6 +22,12 @@ export interface OrderLine {
    * Absent only on mock data; countKinds() then falls back to the line's kind.
    */
   components?: Record<string, number>;
+  /**
+   * Every chosen option with the price charged for it (see options.ts). Source of truth for what the
+   * customer picked; `mods` is the display text built from it. Absent on mock data and on lines made
+   * before 2026-10-27 that could not be mapped.
+   */
+  selections?: Selection[];
 }
 
 export interface Order {

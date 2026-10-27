@@ -136,16 +136,22 @@ export type Database = {
         Row: {
           component_id: string
           item_id: string
+          locked_groups: string[]
+          preset: Json
           qty: number
         }
         Insert: {
           component_id: string
           item_id: string
+          locked_groups?: string[]
+          preset?: Json
           qty?: number
         }
         Update: {
           component_id?: string
           item_id?: string
+          locked_groups?: string[]
+          preset?: Json
           qty?: number
         }
         Relationships: [
@@ -274,6 +280,136 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_option_groups: {
+        Row: {
+          active: boolean
+          extra_price: number
+          free_count: number
+          free_count_by_group: string | null
+          id: string
+          item_id: string
+          max_picks: number
+          name: string
+          parent_group_id: string | null
+          pick: Database["public"]["Enums"]["pick_mode"]
+          price_mode: Database["public"]["Enums"]["price_mode"]
+          required: boolean
+          sort: number
+          translations: Json
+        }
+        Insert: {
+          active?: boolean
+          extra_price?: number
+          free_count?: number
+          free_count_by_group?: string | null
+          id?: string
+          item_id: string
+          max_picks?: number
+          name: string
+          parent_group_id?: string | null
+          pick?: Database["public"]["Enums"]["pick_mode"]
+          price_mode?: Database["public"]["Enums"]["price_mode"]
+          required?: boolean
+          sort?: number
+          translations?: Json
+        }
+        Update: {
+          active?: boolean
+          extra_price?: number
+          free_count?: number
+          free_count_by_group?: string | null
+          id?: string
+          item_id?: string
+          max_picks?: number
+          name?: string
+          parent_group_id?: string | null
+          pick?: Database["public"]["Enums"]["pick_mode"]
+          price_mode?: Database["public"]["Enums"]["price_mode"]
+          required?: boolean
+          sort?: number
+          translations?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_option_groups_free_count_by_group_fkey"
+            columns: ["free_count_by_group"]
+            isOneToOne: false
+            referencedRelation: "menu_option_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_option_groups_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "menu_option_groups_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_option_groups_parent_group_id_fkey"
+            columns: ["parent_group_id"]
+            isOneToOne: false
+            referencedRelation: "menu_option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_options: {
+        Row: {
+          active: boolean
+          exclusive: boolean
+          free_count: number | null
+          group_id: string
+          id: string
+          is_default: boolean
+          name: string
+          price: number | null
+          sort: number
+          stock_key: string | null
+          translations: Json
+        }
+        Insert: {
+          active?: boolean
+          exclusive?: boolean
+          free_count?: number | null
+          group_id: string
+          id?: string
+          is_default?: boolean
+          name: string
+          price?: number | null
+          sort?: number
+          stock_key?: string | null
+          translations?: Json
+        }
+        Update: {
+          active?: boolean
+          exclusive?: boolean
+          free_count?: number | null
+          group_id?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          price?: number | null
+          sort?: number
+          stock_key?: string | null
+          translations?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_options_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "menu_option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_day_counters: {
         Row: {
           day_key: string
@@ -299,6 +435,7 @@ export type Database = {
           name: string
           order_id: string
           qty: number
+          selections: Json
           sort: number
           unit: number
         }
@@ -311,6 +448,7 @@ export type Database = {
           name: string
           order_id: string
           qty: number
+          selections?: Json
           sort?: number
           unit: number
         }
@@ -323,6 +461,7 @@ export type Database = {
           name?: string
           order_id?: string
           qty?: number
+          selections?: Json
           sort?: number
           unit?: number
         }
@@ -574,7 +713,9 @@ export type Database = {
       }
       option_sales: {
         Row: {
+          component: string | null
           day: string | null
+          group_name: string | null
           item_name: string | null
           kind: string | null
           menu_item_id: string | null
@@ -582,6 +723,7 @@ export type Database = {
           paid_qty: number | null
           placement: string | null
           qty: number | null
+          revenue: number | null
         }
         Relationships: [
           {
@@ -659,6 +801,8 @@ export type Database = {
       order_source: "counter" | "qr"
       order_status: "pending" | "approved" | "completed" | "cancelled"
       payment_method: "Cash" | "Card" | "CliQ" | "Apple Pay"
+      pick_mode: "one" | "many"
+      price_mode: "add" | "replace"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -794,6 +938,8 @@ export const Constants = {
       order_source: ["counter", "qr"],
       order_status: ["pending", "approved", "completed", "cancelled"],
       payment_method: ["Cash", "Card", "CliQ", "Apple Pay"],
+      pick_mode: ["one", "many"],
+      price_mode: ["add", "replace"],
     },
   },
 } as const
