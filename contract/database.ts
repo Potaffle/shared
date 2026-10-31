@@ -654,6 +654,16 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_sauces: {
+        Row: {
+          day: string | null
+          free: number | null
+          paid: number | null
+          taken: number | null
+          unknown: number | null
+        }
+        Relationships: []
+      }
       daily_stats: {
         Row: {
           day: string | null
@@ -794,6 +804,7 @@ export type Database = {
         Args: { p_email: string; p_role: string }
         Returns: undefined
       }
+      stock_key_in_use: { Args: { p_key: string }; Returns: boolean }
     }
     Enums: {
       menu_config: "none" | "sauces" | "tops"
