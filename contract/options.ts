@@ -37,7 +37,7 @@ export interface MenuOption {
   translations?: Record<string, unknown> | null;
   /** add groups: price beyond the free picks, null = group extra_price. replace groups: the item price. */
   price: number | null;
-  /** Used when another group's free count varies by this option. */
+  /** Sauces included per unit (Small 1, Medium 2); also read when another group's free count varies by this option. */
   free_count: number | null;
   stock_key: string | null;
   exclusive: boolean;
@@ -76,6 +76,8 @@ export interface Selection {
   /** Offer lines: the component the pick belongs to. */
   component_id?: string;
   component?: string;
+  /** Sauces one unit of the line includes because of this pick (Small 1, Medium 2). See allocateSauces. */
+  free_sauces?: number;
   followup?: { group_id: string; group: string; option_id: string; option: string; price: number };
 }
 
@@ -279,6 +281,7 @@ export function priceItem(item: { price: number; name?: string }, groups: Option
       const sel: Selection = { group_id: g.id, group: g.name, option_id: c.opt.id, option: c.opt.name, price: money(price), ...tag };
       if (c.included) sel.included = true;
       if (replaces) sel.replaces = true;
+      if (c.opt.free_count) sel.free_sauces = c.opt.free_count;
       if (followup) sel.followup = followup;
       selections.push(sel);
       extras += sel.price + (followup?.price ?? 0);
@@ -291,3 +294,62 @@ export function priceItem(item: { price: number; name?: string }, groups: Option
 
 /** Display text for an offer line's mods: "Fries: Small", "Fries: Ketchup · on fries". */
 export const componentMods = (componentName: string, mods: string[]) => mods.map((m) => `${componentName}: ${m}`);
+
+/* ---------- Sauces: a free allowance for the whole order ---------- */
+
+/** Menu items of this kind share the order's free allowance. */
+export const SAUCE_KIND = 'sauce';
+
+/** The part of an order line the sauce rule reads; both OrderLine and the server's lines fit. */
+export interface SauceLine {
+  kind: string;
+  name: string;
+  qty: number;
+  unit: number;
+  selections?: Selection[] | null;
+}
+
+export interface SauceSummary {
+  /** Sauces the order includes: three Medium and one Small make 7. */
+  free: number;
+  /** Sauces on the order, free and paid. */
+  taken: number;
+  /** Included sauces nobody chose yet (the "unknown sauces" asked at completion). */
+  unknown: number;
+  /** Sauces beyond the free ones. */
+  paid: number;
+}
+
+export function sauceSummary(lines: readonly SauceLine[]): SauceSummary {
+  const free = lines.reduce((n, l) => n + l.qty * (l.selections ?? []).reduce((m, s) => m + (s.free_sauces ?? 0), 0), 0);
+  const taken = lines.reduce((n, l) => n + (l.kind === SAUCE_KIND ? l.qty : 0), 0);
+  return { free, taken, unknown: Math.max(0, free - taken), paid: Math.max(0, taken - free) };
+}
+
+/**
+ * Applies the allowance to an order's sauce lines: the first `free` sauces cost 0, the rest their list price.
+ * Lines of one sauce are merged at the first one's place, then split into a free line and a paid line when the
+ * allowance ends inside it, because a line has one unit price. Safe to run again on its own result, so call it
+ * after every change to the order. `listPrice` gives a sauce's menu price (a free line's own unit is 0).
+ */
+export function allocateSauces<T extends SauceLine>(lines: readonly T[], listPrice: (line: T) => number): T[] {
+  let left = sauceSummary(lines).free;
+  const totals = new Map<string, number>();
+  for (const l of lines) if (l.kind === SAUCE_KIND) totals.set(l.name, (totals.get(l.name) ?? 0) + l.qty);
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const l of lines) {
+    if (l.kind !== SAUCE_KIND) {
+      out.push(l);
+      continue;
+    }
+    if (seen.has(l.name)) continue;
+    seen.add(l.name);
+    const total = totals.get(l.name) ?? 0;
+    const free = Math.min(left, total);
+    left -= free;
+    if (free > 0) out.push({ ...l, qty: free, unit: 0 });
+    if (total > free) out.push({ ...l, qty: total - free, unit: money(listPrice(l)) });
+  }
+  return out;
+}
