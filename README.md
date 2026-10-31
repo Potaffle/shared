@@ -1,6 +1,6 @@
 # Potaffle shared
 
-Shared between the Potaffle repositories (`staff-dashboard`, `order-qr`, `backend`) as a git submodule.
+Shared between the Potaffle repositories (`potaffle-counter`, `order-qr`, `backend`) as a git submodule.
 
 - `brand/`: logo set, fonts, icons and the colour tokens.
 - `contract/`: TypeScript types for orders and the menu, the single source of truth all apps and the backend follow.
