@@ -810,6 +810,7 @@ export type Database = {
           p_email: string
           p_name?: string
           p_name_ar?: string
+          p_owner?: boolean
           p_role: string
         }
         Returns: undefined
