@@ -43,6 +43,10 @@ export interface Order {
   createdAt: string;
   /** ISO timestamp of payment (approval at the counter, or creation for counter orders); null while pending or cancelled. */
   paidAt: string | null;
+  /** ISO timestamp the order was completed; null unless status is completed. */
+  completedAt?: string | null;
+  /** ISO timestamp the order was cancelled; null unless status is cancelled. */
+  cancelledAt?: string | null;
   lines: OrderLine[];
   phone: string | null;
   pay: Payment;
