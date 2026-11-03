@@ -807,10 +807,10 @@ export type Database = {
       }
       set_staff: {
         Args: {
+          p_email: string
           p_name?: string
           p_name_ar?: string
           p_role: string
-          p_staff_id: string
         }
         Returns: undefined
       }
