@@ -798,11 +798,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_kitchen: { Args: never; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       line_components: {
         Args: { p_kind: string; p_menu_item_id: string }
         Returns: Json
+      }
+      set_staff: {
+        Args: {
+          p_name?: string
+          p_name_ar?: string
+          p_role: string
+          p_staff_id: string
+        }
+        Returns: undefined
       }
       set_user_role: {
         Args: { p_email: string; p_role: string }
