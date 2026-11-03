@@ -527,6 +527,7 @@ export type Database = {
       orders: {
         Row: {
           cancelled_at: string | null
+          cash_part: number | null
           completed_at: string | null
           created_at: string
           customer_id: string | null
@@ -544,6 +545,7 @@ export type Database = {
         }
         Insert: {
           cancelled_at?: string | null
+          cash_part?: number | null
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
@@ -561,6 +563,7 @@ export type Database = {
         }
         Update: {
           cancelled_at?: string | null
+          cash_part?: number | null
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
@@ -772,6 +775,7 @@ export type Database = {
         Args: { p_lines: Json; p_order: Json }
         Returns: {
           cancelled_at: string | null
+          cash_part: number | null
           completed_at: string | null
           created_at: string
           customer_id: string | null

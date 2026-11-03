@@ -46,6 +46,8 @@ export interface Order {
   lines: OrderLine[];
   phone: string | null;
   pay: Payment;
+  /** Split payment: the part paid in cash, the rest is on `pay`. Absent or null when the order has one method. */
+  cashPart?: number | null;
   status: OrderStatus;
   /** Where the order came from: created by staff at the counter, or by a customer through the QR app. */
   source: 'counter' | 'qr';
@@ -53,6 +55,14 @@ export interface Order {
 
 export const lineTotal = (l: OrderLine) => l.qty * l.unit;
 export const orderTotal = (o: { lines: OrderLine[] }) => o.lines.reduce((s, l) => s + lineTotal(l), 0);
+/** How an order was paid: its one method, or the cash part and the rest on `pay`. Cash stops at the total, since lines can change after the split. */
+export const paymentParts = (o: Pick<Order, 'pay' | 'cashPart' | 'lines'>): { pay: Payment; amount: number }[] => {
+  const total = orderTotal(o);
+  const cash = Math.min(o.cashPart ?? 0, total);
+  if (cash <= 0) return [{ pay: o.pay, amount: total }];
+  const rest = Math.round((total - cash) * 1000) / 1000;
+  return rest > 0 ? [{ pay: 'Cash', amount: cash }, { pay: o.pay, amount: rest }] : [{ pay: 'Cash', amount: cash }];
+};
 /** Units of the given kinds that one unit of the line makes (from its components snapshot, else its kind). */
 export const lineMakes = (l: Pick<OrderLine, 'kind' | 'components'>, kinds: ItemKind[]) =>
   l.components ? kinds.reduce((s, k) => s + (l.components?.[k] ?? 0), 0) : kinds.includes(l.kind) ? 1 : 0;
@@ -132,6 +142,7 @@ export const todayBusinessDay = (start?: string, tz?: string) => businessDay(new
 export const isToday = (o: Pick<Order, 'dayKey'>, start?: string, tz?: string) => o.dayKey === todayBusinessDay(start, tz);
 
 export const PHONE_PREFIX = '+962';
+export const DEFAULT_CALLING_CODE = '962';
 const digitsOnly = (v: string) => v.replace(/\D/g, '');
 
 /** Local part of a Jordanian mobile: 7 followed by 7, 8 or 9, then 7 digits (accepts a leading 0 or the +962 prefix). */
@@ -144,14 +155,39 @@ export const normaliseLocalPhone = (v: string): string => {
 export const isValidJordanMobile = (local: string) => /^7[789]\d{7}$/.test(local);
 
 /** Stored form: E.164 without spaces, e.g. +962791234567. Empty input gives null. */
-export const toPhone = (local: string): string | null => {
-  const d = normaliseLocalPhone(local);
-  return d ? `${PHONE_PREFIX}${d}` : null;
+export const toPhone = (local: string, code = DEFAULT_CALLING_CODE): string | null => {
+  const c = digitsOnly(code);
+  if (c === DEFAULT_CALLING_CODE) {
+    const d = normaliseLocalPhone(local);
+    return d ? `${PHONE_PREFIX}${d}` : null;
+  }
+  const d = digitsOnly(local).replace(/^0+/, '');
+  return d ? `+${c}${d}` : null;
+};
+/** Jordan must be a mobile; any other country a plausible E.164 number. */
+export const isValidPhone = (local: string, code = DEFAULT_CALLING_CODE) => {
+  if (!/^[1-9]\d{0,2}$/.test(digitsOnly(code))) return false;
+  const phone = toPhone(local, code) ?? '';
+  return phone.startsWith(PHONE_PREFIX) ? /^\+9627[789]\d{7}$/.test(phone) : /^\+[1-9]\d{7,14}$/.test(phone);
+};
+/** Calling codes are one digit (1, 7), two in the zones below, otherwise three. */
+const callingCodeLength = (d: string) =>
+  /^[17]/.test(d) ? 1 : /^(2[07]|3[0-469]|4[013-9]|5[1-8]|6[0-6]|8[1246]|9[0-58])/.test(d) ? 2 : 3;
+/** A stored number split for editing. No number gives the default code. */
+export const splitPhone = (phone: string | null) => {
+  const d = digitsOnly(phone ?? '');
+  if (!d) return { code: DEFAULT_CALLING_CODE, local: '' };
+  const n = callingCodeLength(d);
+  return { code: d.slice(0, n), local: d.slice(n) };
 };
 /** Local digits for editing (no prefix). Accepts stored values with or without spaces. */
 export const fromPhone = (phone: string | null) => (phone ? normaliseLocalPhone(phone) : '');
-/** Display form: +962 79 123 4567. */
+/** Display form: +962 79 123 4567, or +44 7911123456 for other countries. */
 export const fmtPhone = (phone: string) => {
+  if (phone.trim().startsWith('+') && !digitsOnly(phone).startsWith(DEFAULT_CALLING_CODE)) {
+    const { code, local } = splitPhone(phone);
+    return `+${code} ${local}`;
+  }
   const d = normaliseLocalPhone(phone);
   return d.length === 9 ? `${PHONE_PREFIX} ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}` : phone;
 };
