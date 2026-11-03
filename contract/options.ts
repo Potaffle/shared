@@ -300,6 +300,10 @@ export const componentMods = (componentName: string, mods: string[]) => mods.map
 /** Menu items of this kind share the order's free allowance. */
 export const SAUCE_KIND = 'sauce';
 
+/** The Unknown sauce item: a sauce nobody has named yet. A real line, shared out and charged like any sauce. */
+export const UNKNOWN_SAUCE_SLUG = 'sauce-unknown';
+export const UNKNOWN_SAUCE = 'Unknown sauce';
+
 /** The part of an order line the sauce rule reads; both OrderLine and the server's lines fit. */
 export interface SauceLine {
   kind: string;
@@ -312,18 +316,43 @@ export interface SauceLine {
 export interface SauceSummary {
   /** Sauces the order includes: three Medium and one Small make 7. */
   free: number;
-  /** Sauces on the order, free and paid. */
+  /** Sauces on the order, free and paid, unknown ones included. */
   taken: number;
-  /** Included sauces nobody chose yet (the "unknown sauces" asked at completion). */
+  /** Unknown sauces on the order (the ones asked at completion). Fewer taken than free means the customer took fewer. */
   unknown: number;
   /** Sauces beyond the free ones. */
   paid: number;
 }
 
+export const isUnknownSauce = (l: Pick<SauceLine, 'kind' | 'name'>) => l.kind === SAUCE_KIND && l.name === UNKNOWN_SAUCE;
+
 export function sauceSummary(lines: readonly SauceLine[]): SauceSummary {
   const free = lines.reduce((n, l) => n + l.qty * (l.selections ?? []).reduce((m, s) => m + (s.free_sauces ?? 0), 0), 0);
   const taken = lines.reduce((n, l) => n + (l.kind === SAUCE_KIND ? l.qty : 0), 0);
-  return { free, taken, unknown: Math.max(0, free - taken), paid: Math.max(0, taken - free) };
+  const unknown = lines.reduce((n, l) => n + (isUnknownSauce(l) ? l.qty : 0), 0);
+  return { free, taken, unknown, paid: Math.max(0, taken - free) };
+}
+
+/**
+ * Keeps the Unknown line in step after an order changed; `after` is the order with the change applied. Fries bring
+ * their free sauces as unknown ones and take them away again, a named sauce replaces an unknown one, and removing a
+ * named sauce gives one back while the order is below its free sauces. A change to the Unknown line itself is left
+ * as it is. `makeUnknown` builds the line when the order has none. Run allocateSauces on the result.
+ */
+export function syncUnknownSauces<T extends SauceLine>(before: readonly T[], after: readonly T[], makeUnknown: (qty: number) => T): T[] {
+  const was = sauceSummary(before);
+  const now = sauceSummary(after);
+  const named = now.taken - now.unknown;
+  const namedChange = named - (was.taken - was.unknown);
+  let unknown = now.unknown + now.free - was.free;
+  if (namedChange > 0) unknown -= namedChange;
+  else if (namedChange < 0) unknown += Math.min(-namedChange, Math.max(0, now.free - named - unknown));
+  unknown = Math.max(0, unknown);
+  if (unknown === now.unknown) return [...after];
+  if (unknown === 0) return after.filter((l) => !isUnknownSauce(l));
+  const first = after.find(isUnknownSauce);
+  if (!first) return [...after, makeUnknown(unknown)];
+  return after.filter((l) => l === first || !isUnknownSauce(l)).map((l) => (l === first ? { ...l, qty: unknown } : l));
 }
 
 /**
