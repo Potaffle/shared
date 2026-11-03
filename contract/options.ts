@@ -324,7 +324,7 @@ export interface SauceSummary {
   paid: number;
 }
 
-export const isUnknownSauce = (l: Pick<SauceLine, 'kind' | 'name'>) => l.kind === SAUCE_KIND && l.name === UNKNOWN_SAUCE;
+export const isUnknownSauce = (l: { kind: SauceLine['kind']; name: SauceLine['name'] }) => l.kind === SAUCE_KIND && l.name === UNKNOWN_SAUCE;
 
 export function sauceSummary(lines: readonly SauceLine[]): SauceSummary {
   const free = lines.reduce((n, l) => n + l.qty * (l.selections ?? []).reduce((m, s) => m + (s.free_sauces ?? 0), 0), 0);
