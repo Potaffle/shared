@@ -39,6 +39,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      counter_screen: {
+        Row: {
+          cart: Json
+          id: string
+          order_id: string | null
+          phone: string | null
+          phone_from: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          cart?: Json
+          id?: string
+          order_id?: string | null
+          phone?: string | null
+          phone_from?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          cart?: Json
+          id?: string
+          order_id?: string | null
+          phone?: string | null
+          phone_from?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counter_screen_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
@@ -197,7 +235,9 @@ export type Database = {
           kind: string
           line_name: string | null
           name: string
+          points: number
           price: number
+          reward_cost: number | null
           slug: string
           sort: number
           stock_key: string
@@ -214,7 +254,9 @@ export type Database = {
           kind: string
           line_name?: string | null
           name: string
+          points?: number
           price: number
+          reward_cost?: number | null
           slug: string
           sort?: number
           stock_key: string
@@ -231,7 +273,9 @@ export type Database = {
           kind?: string
           line_name?: string | null
           name?: string
+          points?: number
           price?: number
+          reward_cost?: number | null
           slug?: string
           sort?: number
           stock_key?: string
@@ -369,6 +413,7 @@ export type Database = {
           id: string
           is_default: boolean
           name: string
+          points: number
           price: number | null
           sort: number
           stock_key: string | null
@@ -382,6 +427,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           name: string
+          points?: number
           price?: number | null
           sort?: number
           stock_key?: string | null
@@ -395,6 +441,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           name?: string
+          points?: number
           price?: number | null
           sort?: number
           stock_key?: string | null
@@ -434,7 +481,9 @@ export type Database = {
           mods: string[]
           name: string
           order_id: string
+          points: number
           qty: number
+          reward_cost: number | null
           selections: Json
           sort: number
           unit: number
@@ -447,7 +496,9 @@ export type Database = {
           mods?: string[]
           name: string
           order_id: string
+          points?: number
           qty: number
+          reward_cost?: number | null
           selections?: Json
           sort?: number
           unit: number
@@ -460,7 +511,9 @@ export type Database = {
           mods?: string[]
           name?: string
           order_id?: string
+          points?: number
           qty?: number
+          reward_cost?: number | null
           selections?: Json
           sort?: number
           unit?: number
@@ -770,6 +823,7 @@ export type Database = {
         Args: { p_components: Json; p_kinds: string[] }
         Returns: number
       }
+      customer_points: { Args: { p_phone: string }; Returns: Json }
       get_order: { Args: { p_id: string }; Returns: Json }
       insert_order: {
         Args: { p_lines: Json; p_order: Json }
@@ -798,11 +852,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_keypad: { Args: never; Returns: boolean }
       is_kitchen: { Args: never; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      keypad_phone: {
+        Args: { p_phone: string; p_screen?: string }
+        Returns: Json
+      }
+      keypad_points: { Args: { p_screen?: string }; Returns: Json }
       line_components: {
         Args: { p_kind: string; p_menu_item_id: string }
+        Returns: Json
+      }
+      points_of: {
+        Args: { p_customer: string; p_day?: string; p_skip_line?: string }
         Returns: Json
       }
       set_staff: {

@@ -28,6 +28,10 @@ export interface OrderLine {
    * before 2026-10-27 that could not be mapped.
    */
   selections?: Selection[];
+  /** Loyalty points earned per unit, snapshot by the database (see loyalty.ts). 0 on reward lines. */
+  points?: number;
+  /** Points spent on this line taken free; null or absent when it is not a reward. */
+  rewardCost?: number | null;
 }
 
 export interface Order {
