@@ -34,7 +34,7 @@ These rules apply in all Potaffle repositories. Each repo's `CLAUDE.md` imports 
 
 - Everything stays on free tiers (Supabase Free, Cloudflare Pages, GitHub Free). The restaurant owner pays nothing monthly.
 - Version one payments: Cash and CliQ only on QR. The Counter also takes Card, and a split of cash plus one other method. Every QR order starts `pending`; staff approve at the counter. Counter orders start `approved`.
-- The customer's phone number is the customer identity. Store it normalised as E.164 without spaces (`+9627XXXXXXXX`). Validate Jordanian mobiles (`7[789]` + 7 digits). The Counter also takes other countries' numbers, E.164 with 8 to 15 digits; the QR app stays Jordan only. Format only for display.
+- The customer's phone number is the customer identity. Store it normalised as E.164 without spaces (`+9627XXXXXXXX`). Validate Jordanian mobiles (`7[789]` + 7 digits). The Counter also takes other countries' numbers, E.164 with 8 to 15 digits; the Order app stays Jordan only. Format only for display.
 - Prices are computed and stored server-side; a client never sends a trusted total.
 - Order lines snapshot name, modifiers and unit price at order time, so menu edits never change history.
 
