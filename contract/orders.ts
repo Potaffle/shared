@@ -4,7 +4,7 @@ import type { Selection } from './options';
 export type OrderStatus = 'pending' | 'approved' | 'completed' | 'cancelled';
 export const STATUSES: OrderStatus[] = ['approved', 'pending', 'completed', 'cancelled'];
 
-/** 'Apple Pay' only comes from the customer QR app; the counter offers Cash / Card / CliQ. */
+/** 'Apple Pay' only comes from the customer Order app; the counter offers Cash / Card / CliQ. */
 export type Payment = 'Cash' | 'Card' | 'CliQ' | 'Apple Pay';
 export const COUNTER_PAYMENTS: Payment[] = ['Cash', 'Card', 'CliQ'];
 
@@ -53,7 +53,7 @@ export interface Order {
   /** Split payment: the part paid in cash, the rest is on `pay`. Absent or null when the order has one method. */
   cashPart?: number | null;
   status: OrderStatus;
-  /** Where the order came from: created by staff at the counter, or by a customer through the QR app. */
+  /** Where the order came from: created by staff at the counter, or by a customer through the Order app (QR code). */
   source: 'counter' | 'qr';
 }
 

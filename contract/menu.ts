@@ -37,7 +37,7 @@ export const CATEGORIES: Category[] = ['main', 'offers', 'sauces', 'drinks'];
 
 export type KnownKind = 'fries' | 'waffle' | 'student' | 'sauce' | 'water' | 'cola' | 'sprite' | 'fanta';
 /**
- * The known kinds plus any the owner creates later: an offer added through the owner app gets its slug as
+ * The known kinds plus any the owner creates later: an offer added through the Admin app gets its slug as
  * its kind ('combo'), so treat kind as an open string and never as a closed list.
  */
 export type ItemKind = KnownKind | (string & {});
