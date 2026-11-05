@@ -8,7 +8,7 @@
   - `icons/admin/`: the Admin app, installed as "Potaffle Admin" (three yellow bars).
   The old generic `icon-*.png` / `apple-touch-icon.png` at the top level are superseded by these.
 
-- `photos/`: food and shop photos for the customer keypad (2026-11-05, taken from the restaurant's Google Maps listing, about 1400 px JPEG): `fries-cone.jpg`, `fries-cone-2.jpg`, `waffle-cream.jpg`, `waffle-box.jpg`, `storefront.jpg`, `storefront-night.jpg`. Some Maps photos may be customer uploads; replace them with the restaurant's own shots when there are some.
+- `photos/`: food and shop photos for the customer keypad (2026-11-05, taken from the restaurant's Google Maps listing, about 1400 px JPEG): `fries-cone.jpg`, `fries-cone-2.jpg`, `waffle-cream.jpg`, `waffle-box.jpg`, `storefront.jpg`, `storefront-night.jpg`. `waffle-sugar.jpg` (a waffle with powdered sugar in its box) is Yazeed's own, sent on 2026-11-05. Some Maps photos may be customer uploads; replace them with the restaurant's own shots when there are some.
 
 Colours: gold `#E8A427`, dark gold `#B4791B`, ink `#1F1C1C`, light surface `#F4F1EC`, light border `#E4DCCF`, muted text `#6B5E4E`. Dark theme: screen `#1F1C1C`, card `#2A2523`, border `#463E39`, surface `#332D2A`, text `#F4F1EC`, muted `#B5A894`.
 Shapes: 24px card radius, pill (999px) buttons, 44px+ tap targets.
