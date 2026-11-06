@@ -9,6 +9,8 @@ export type Payment = 'Cash' | 'Card' | 'CliQ' | 'Apple Pay';
 export const COUNTER_PAYMENTS: Payment[] = ['Cash', 'Card', 'CliQ'];
 
 export interface OrderLine {
+  /** order_lines.id when the line was read from the database; absent on a line not saved yet. */
+  id?: string;
   kind: ItemKind;
   name: string;
   qty: number;
