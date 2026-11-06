@@ -32,6 +32,15 @@ export interface OrderLine {
   points?: number;
   /** Points spent on this line taken free; null or absent when it is not a reward. */
   rewardCost?: number | null;
+  /**
+   * Free by the cashier (order_lines.gift): no points spent, none earned. Clients set only this flag; the database
+   * keeps unit at 0 and moves the price to giftUnit. Ungifting restores it. Not combined with rewardCost.
+   */
+  gift?: boolean;
+  /** What one unit would have cost, on gift lines (order_lines.gift_unit); null otherwise. */
+  giftUnit?: number | null;
+  /** Units already handed to the customer, 0 to qty (order_lines.given). Clamped to qty by the database. */
+  given?: number;
 }
 
 export interface Order {
@@ -59,6 +68,8 @@ export interface Order {
   status: OrderStatus;
   /** Where the order came from: created by staff at the counter, or by a customer through the Order app (QR code). */
   source: 'counter' | 'qr';
+  /** ISO timestamp the "order ready" WhatsApp message went out (orders.ready_sent_at); null = not yet. Set by notify-ready only. */
+  readySentAt?: string | null;
 }
 
 export const lineTotal = (l: OrderLine) => l.qty * l.unit;

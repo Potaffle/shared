@@ -56,10 +56,13 @@ export interface CounterScreenLine {
   points: number;
   /** Free for points. */
   reward?: boolean;
+  /** Free by the cashier (unit 0, points 0). */
+  gift?: boolean;
 }
 
 /** counter_screen.cart, written by the Counter. */
 export interface CounterScreenCart {
+  /** The order's number: the real one when editing, next_order_num() for a new order (a preview). */
   num?: number | null;
   lines?: CounterScreenLine[];
   total?: number;

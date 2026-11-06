@@ -475,6 +475,9 @@ export type Database = {
       order_lines: {
         Row: {
           components: Json
+          gift: boolean
+          gift_unit: number | null
+          given: number
           id: string
           kind: string
           menu_item_id: string | null
@@ -490,6 +493,9 @@ export type Database = {
         }
         Insert: {
           components?: Json
+          gift?: boolean
+          gift_unit?: number | null
+          given?: number
           id?: string
           kind: string
           menu_item_id?: string | null
@@ -505,6 +511,9 @@ export type Database = {
         }
         Update: {
           components?: Json
+          gift?: boolean
+          gift_unit?: number | null
+          given?: number
           id?: string
           kind?: string
           menu_item_id?: string | null
@@ -590,6 +599,7 @@ export type Database = {
           paid_at: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
+          ready_sent_at: string | null
           seq: number
           source: Database["public"]["Enums"]["order_source"]
           status: Database["public"]["Enums"]["order_status"]
@@ -608,6 +618,7 @@ export type Database = {
           paid_at?: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
+          ready_sent_at?: string | null
           seq: number
           source: Database["public"]["Enums"]["order_source"]
           status?: Database["public"]["Enums"]["order_status"]
@@ -626,6 +637,7 @@ export type Database = {
           paid_at?: string | null
           pay?: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
+          ready_sent_at?: string | null
           seq?: number
           source?: Database["public"]["Enums"]["order_source"]
           status?: Database["public"]["Enums"]["order_status"]
@@ -684,6 +696,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: number
+          kind: string
+          order_id: string | null
+          phone: string
+          status: string
+          wamid: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: never
+          kind: string
+          order_id?: string | null
+          phone: string
+          status: string
+          wamid?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: never
+          kind?: string
+          order_id?: string | null
+          phone?: string
+          status?: string
+          wamid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -839,6 +892,7 @@ export type Database = {
           paid_at: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
+          ready_sent_at: string | null
           seq: number
           source: Database["public"]["Enums"]["order_source"]
           status: Database["public"]["Enums"]["order_status"]
@@ -865,6 +919,7 @@ export type Database = {
         Args: { p_kind: string; p_menu_item_id: string }
         Returns: Json
       }
+      next_order_num: { Args: never; Returns: number }
       points_of: {
         Args: { p_customer: string; p_day?: string; p_skip_line?: string }
         Returns: Json

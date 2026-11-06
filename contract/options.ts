@@ -311,6 +311,8 @@ export interface SauceLine {
   qty: number;
   unit: number;
   selections?: Selection[] | null;
+  /** Free by the cashier: a gift sauce stays its own line and neither uses nor counts against the allowance. */
+  gift?: boolean;
 }
 
 export interface SauceSummary {
@@ -328,8 +330,8 @@ export const isUnknownSauce = (l: { kind: SauceLine['kind']; name: SauceLine['na
 
 export function sauceSummary(lines: readonly SauceLine[]): SauceSummary {
   const free = lines.reduce((n, l) => n + l.qty * (l.selections ?? []).reduce((m, s) => m + (s.free_sauces ?? 0), 0), 0);
-  const taken = lines.reduce((n, l) => n + (l.kind === SAUCE_KIND ? l.qty : 0), 0);
-  const unknown = lines.reduce((n, l) => n + (isUnknownSauce(l) ? l.qty : 0), 0);
+  const taken = lines.reduce((n, l) => n + (l.kind === SAUCE_KIND && !l.gift ? l.qty : 0), 0);
+  const unknown = lines.reduce((n, l) => n + (isUnknownSauce(l) && !l.gift ? l.qty : 0), 0);
   return { free, taken, unknown, paid: Math.max(0, taken - free) };
 }
 
@@ -358,17 +360,17 @@ export function syncUnknownSauces<T extends SauceLine>(before: readonly T[], aft
 /**
  * Applies the allowance to an order's sauce lines: the first `free` sauces cost 0, the rest their list price.
  * Lines of one sauce are merged at the first one's place, then split into a free line and a paid line when the
- * allowance ends inside it, because a line has one unit price. Safe to run again on its own result, so call it
+ * allowance ends inside it, because a line has one unit price. Gift lines pass through untouched. Safe to run again on its own result, so call it
  * after every change to the order. `listPrice` gives a sauce's menu price (a free line's own unit is 0).
  */
 export function allocateSauces<T extends SauceLine>(lines: readonly T[], listPrice: (line: T) => number): T[] {
   let left = sauceSummary(lines).free;
   const totals = new Map<string, number>();
-  for (const l of lines) if (l.kind === SAUCE_KIND) totals.set(l.name, (totals.get(l.name) ?? 0) + l.qty);
+  for (const l of lines) if (l.kind === SAUCE_KIND && !l.gift) totals.set(l.name, (totals.get(l.name) ?? 0) + l.qty);
   const seen = new Set<string>();
   const out: T[] = [];
   for (const l of lines) {
-    if (l.kind !== SAUCE_KIND) {
+    if (l.kind !== SAUCE_KIND || l.gift) {
       out.push(l);
       continue;
     }
