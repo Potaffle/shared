@@ -89,6 +89,9 @@ export const lineMakes = (l: Pick<OrderLine, 'kind' | 'components'>, kinds: Item
   l.components ? kinds.reduce((s, k) => s + (l.components?.[k] ?? 0), 0) : kinds.includes(l.kind) ? 1 : 0;
 export const countKinds = (o: Pick<Order, 'lines'>, kinds: ItemKind[]) =>
   o.lines.reduce((s, l) => s + l.qty * lineMakes(l, kinds), 0);
+/** Units of the given kinds still to hand over: each line's qty minus its given count. Gift lines count like any other. */
+export const countKindsToMake = (o: Pick<Order, 'lines'>, kinds: ItemKind[]) =>
+  o.lines.reduce((s, l) => s + Math.max(0, l.qty - (l.given ?? 0)) * lineMakes(l, kinds), 0);
 export const countFries = (o: Order) => countKinds(o, FRIES_KINDS);
 export const countWaffles = (o: Order) => countKinds(o, WAFFLE_KINDS);
 
