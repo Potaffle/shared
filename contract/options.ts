@@ -52,6 +52,11 @@ export interface Pick {
   option: string;
   /** Follow-up answer (placement) by id or name; the follow-up group's default applies when omitted. */
   followup?: string;
+  /**
+   * Free by the cashier (counter only): an add pick (Nutella) costs nothing; a replace pick (Large) costs what the
+   * group's default option (Small) would. Its follow-up is free too. The saved selection keeps the waived amount.
+   */
+  gift?: boolean;
 }
 
 /** A preset pick of an offer component (menu_item_components.preset). */
@@ -78,6 +83,9 @@ export interface Selection {
   component?: string;
   /** Sauces one unit of the line includes because of this pick (Small 1, Medium 2). See allocateSauces. */
   free_sauces?: number;
+  /** Made free by the cashier (Pick.gift); gift_price is what it would have cost per unit of the line. */
+  gift?: true;
+  gift_price?: number;
   followup?: { group_id: string; group: string; option_id: string; option: string; price: number };
 }
 
@@ -129,6 +137,7 @@ interface Chosen {
   opt: MenuOption;
   fu?: MenuOption;
   included: boolean;
+  gift?: boolean;
 }
 
 /**
@@ -139,7 +148,8 @@ interface Chosen {
  * - replace groups set the item price; add groups charge each pick beyond the free ones (preset picks
  *   are counted first and never charged);
  * - a follow-up group (placement) is answered per pick; its default applies when omitted;
- * - locked groups of an offer must keep the preset.
+ * - locked groups of an offer must keep the preset;
+ * - a gift pick (Pick.gift) is charged nothing beyond what the item costs without it.
  * Throws PricingError; `out_of_stock` when an option's stock key is out.
  */
 export function priceItem(item: { price: number; name?: string }, groups: OptionGroup[], picks: Pick[], o: PriceItemOptions = {}): PricedItem {
@@ -185,7 +195,7 @@ export function priceItem(item: { price: number; name?: string }, groups: Option
       }
     }
     const list = customer.get(g.id) ?? [];
-    if (!list.some((c) => c.opt.id === opt!.id)) list.push({ opt, fu, included: false });
+    if (!list.some((c) => c.opt.id === opt!.id)) list.push({ opt, fu, included: false, gift: raw.gift === true || undefined });
     customer.set(g.id, list);
   }
 
@@ -260,25 +270,43 @@ export function priceItem(item: { price: number; name?: string }, groups: Option
     chosen.forEach((c, i) => {
       let price = 0;
       let replaces: true | undefined;
+      let waived = 0;
       if (g.price_mode === 'replace') {
         replaces = true;
-        const newBase = c.opt.price ?? Number(item.price);
+        let newBase = c.opt.price ?? Number(item.price);
         if (o.preset) {
           // Offer: the customer pays the difference when choosing a dearer option than the preset.
           const presetOpt = presetByGroup.get(g.id)?.[0];
           const presetPrice = presetOpt ? g.options.find((x) => x.id === presetOpt.option_id)?.price ?? Number(item.price) : Number(item.price);
           price = c.included ? 0 : Math.max(0, newBase - Number(presetPrice));
+        } else if (c.gift) {
+          // A plain item keeps the price it has without this pick: the group's default option, else the item price.
+          const plain = activeOptions(g).find((x) => x.is_default)?.price ?? Number(item.price);
+          waived = Math.max(0, newBase - Number(plain));
+          newBase -= waived;
         }
         base = newBase;
       } else {
         price = c.included || i < free ? 0 : Number(c.opt.price ?? g.extra_price);
       }
+      if (c.gift) {
+        waived += price;
+        price = 0;
+      }
       let followup: Selection['followup'];
       if (child && c.fu) {
-        const fuPrice = c.included ? 0 : Number(c.fu.price ?? child.extra_price);
+        let fuPrice = c.included ? 0 : Number(c.fu.price ?? child.extra_price);
+        if (c.gift) {
+          waived += fuPrice;
+          fuPrice = 0;
+        }
         followup = { group_id: child.id, group: child.name, option_id: c.fu.id, option: c.fu.name, price: money(fuPrice) };
       }
       const sel: Selection = { group_id: g.id, group: g.name, option_id: c.opt.id, option: c.opt.name, price: money(price), ...tag };
+      if (c.gift) {
+        sel.gift = true;
+        sel.gift_price = money(waived);
+      }
       if (c.included) sel.included = true;
       if (replaces) sel.replaces = true;
       if (c.opt.free_count) sel.free_sauces = c.opt.free_count;

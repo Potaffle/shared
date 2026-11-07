@@ -68,4 +68,6 @@ export interface CounterScreenCart {
   total?: number;
   /** Points this order adds (preview). */
   points?: number;
+  /** Points the order's free-for-points lines will use (sum of their reward costs); the keypad shows them leaving the bar. */
+  spend?: number;
 }
