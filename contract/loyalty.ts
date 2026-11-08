@@ -5,11 +5,12 @@
 // for create-order and for line edits alike, so apps never write points. A customer's points are counted from their
 // approved and completed orders: today's are pending, usable from the next business day (05:00 Amman).
 //
-// Rewards: an item with menu_items.reward_cost is free for that many usable points (fries 10, waffle 20). The
-// free part is the item's base price; extras are paid. One reward per customer per business day, qty 1 per line.
+// Rewards: an item with menu_items.reward_cost is free for that many usable points per unit (fries 10, waffle 20).
+// The free part is the item's base price; extras are paid. Any number of rewards, any qty per line, any day, as long
+// as the usable points cover them (since 2026-11-08: 40 points buy 4 fries, or 2 fries and a waffle).
 // create-order takes `reward: true` on a line; a line edit sets order_lines.reward_cost (any positive number, the
-// trigger replaces it with the menu's). Refusals are errors whose message starts with reward_today, reward_points,
-// reward_no_customer, reward_not_allowed, reward_qty or reward_customer (phone change on an order with a reward).
+// trigger replaces it with the menu's). Refusals are errors whose message starts with reward_points,
+// reward_no_customer, reward_not_allowed or reward_customer (phone change on an order with a reward).
 
 /**
  * keypad_celebrate(): call once after the number is confirmed on the keypad. Returns the reward item slugs ('waffle',
@@ -23,7 +24,7 @@ export interface Points {
   available: number;
   /** Earned today, usable from the next business day. */
   pending: number;
-  /** A reward was already taken today: no other one until tomorrow. */
+  /** A reward was already taken today. Informational only since 2026-11-08: rewards have no daily limit. */
   rewardToday: boolean;
 }
 
@@ -33,11 +34,12 @@ export const NO_POINTS: Points = { phone: null, available: 0, pending: 0, reward
 export const previewPoints = (itemPoints: number, pickedOptionPoints: number[] = []) =>
   itemPoints + pickedOptionPoints.reduce((s, p) => s + p, 0);
 
-/** Rewards the customer can take now, cheapest first: cost <= available and none taken today. */
-export const takeableRewards = <T extends { reward_cost: number | null }>(items: T[], points: Points): T[] =>
-  points.rewardToday
-    ? []
-    : items.filter((i) => i.reward_cost !== null && i.reward_cost <= points.available).sort((a, b) => a.reward_cost! - b.reward_cost!);
+/**
+ * Rewards the customer can still take, cheapest first: cost <= the points left. Pass the points already used by
+ * the cart's reward lines as `spent` (CounterScreenCart.spend) so the list shrinks as rewards are added.
+ */
+export const takeableRewards = <T extends { reward_cost: number | null }>(items: T[], points: Points, spent = 0): T[] =>
+  items.filter((i) => i.reward_cost !== null && i.reward_cost <= points.available - spent).sort((a, b) => a.reward_cost! - b.reward_cost!);
 
 // ---- Counter screen: the row the Counter writes and the keypad watches (table counter_screen, id 'main') ----
 
