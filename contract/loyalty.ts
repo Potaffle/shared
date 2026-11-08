@@ -1,11 +1,11 @@
 // Loyalty points and the customer keypad (backend migration 20261105200000_loyalty_points_keypad).
 //
 // Points come from the menu: menu_items.points plus menu_options.points of the options picked on the item itself
-// (fries 100, waffle 200, offers 0). The database snapshots them on every order line (order_lines.points per unit),
+// (fries 1, waffle 2, offers 0; divided by 100 on 2026-11-08). The database snapshots them on every order line (order_lines.points per unit),
 // for create-order and for line edits alike, so apps never write points. A customer's points are counted from their
 // approved and completed orders: today's are pending, usable from the next business day (05:00 Amman).
 //
-// Rewards: an item with menu_items.reward_cost is free for that many usable points (fries 1000, waffle 2000). The
+// Rewards: an item with menu_items.reward_cost is free for that many usable points (fries 10, waffle 20). The
 // free part is the item's base price; extras are paid. One reward per customer per business day, qty 1 per line.
 // create-order takes `reward: true` on a line; a line edit sets order_lines.reward_cost (any positive number, the
 // trigger replaces it with the menu's). Refusals are errors whose message starts with reward_today, reward_points,
