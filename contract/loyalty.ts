@@ -11,6 +11,11 @@
 // trigger replaces it with the menu's). Refusals are errors whose message starts with reward_today, reward_points,
 // reward_no_customer, reward_not_allowed, reward_qty or reward_customer (phone change on an order with a reward).
 
+/**
+ * keypad_celebrate(): call once after the number is confirmed on the keypad. Returns the reward item slugs ('waffle',
+ * 'fries') whose cost the customer's USABLE points reached for the first time, most expensive first, and marks them;
+ * play the party for the first one. Taking a reward unmarks it, so it celebrates again once earned again.
+ */
 /** customer_points(phone) and keypad_points() / keypad_phone(phone). */
 export interface Points {
   phone: string | null;

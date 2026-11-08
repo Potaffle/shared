@@ -79,6 +79,7 @@ export type Database = {
       }
       customers: {
         Row: {
+          celebrated: string[]
           created_at: string
           id: string
           name: string | null
@@ -87,6 +88,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          celebrated?: string[]
           created_at?: string
           id?: string
           name?: string | null
@@ -95,6 +97,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          celebrated?: string[]
           created_at?: string
           id?: string
           name?: string | null
@@ -910,6 +913,7 @@ export type Database = {
       is_kitchen: { Args: never; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      keypad_celebrate: { Args: { p_screen?: string }; Returns: string[] }
       keypad_phone: {
         Args: { p_phone: string; p_screen?: string }
         Returns: Json
