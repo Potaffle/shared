@@ -882,7 +882,6 @@ export type Database = {
         Args: { p_components: Json; p_kinds: string[] }
         Returns: number
       }
-      customer_counts: { Args: { p_day?: string }; Returns: Json }
       customer_points: { Args: { p_phone: string }; Returns: Json }
       get_order: { Args: { p_id: string }; Returns: Json }
       insert_order: {
@@ -928,6 +927,7 @@ export type Database = {
         Returns: Json
       }
       next_order_num: { Args: never; Returns: number }
+      order_counts: { Args: { p_day?: string }; Returns: Json }
       points_of: {
         Args: { p_customer: string; p_day?: string; p_skip_line?: string }
         Returns: Json
