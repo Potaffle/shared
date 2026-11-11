@@ -41,6 +41,8 @@ export interface OrderLine {
   gift?: boolean;
   /** What one unit would have cost, on gift lines (order_lines.gift_unit); null otherwise. */
   giftUnit?: number | null;
+  /** Base price waived per unit by the cashier, options still charged (order_lines.gift_base); null = base paid. */
+  giftBase?: number | null;
   /** Units already handed to the customer, 0 to qty (order_lines.given). Clamped to qty by the database. */
   given?: number;
 }

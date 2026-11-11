@@ -117,6 +117,8 @@ export interface PriceItemOptions {
   itemName?: string;
   /** Offer lines: the component's id and line name, copied onto each selection. */
   component?: { id: string; name: string };
+  /** Free base price (counter only): the item's base costs nothing, its options stay priced. See PricedItem.base_gift. */
+  giftBase?: boolean;
 }
 
 export interface PricedItem {
@@ -127,6 +129,8 @@ export interface PricedItem {
   selections: Selection[];
   /** Display text per pick: "Ketchup · on fries", "Nutella", "Large". */
   mods: string[];
+  /** With giftBase: the base price waived per unit (order_lines.gift_base). */
+  base_gift?: number;
 }
 
 const money = (n: number) => Math.round(n * 1000) / 1000;
@@ -149,7 +153,8 @@ interface Chosen {
  *   are counted first and never charged);
  * - a follow-up group (placement) is answered per pick; its default applies when omitted;
  * - locked groups of an offer must keep the preset;
- * - a gift pick (Pick.gift) is charged nothing beyond what the item costs without it.
+ * - a gift pick (Pick.gift) is charged nothing beyond what the item costs without it;
+ * - giftBase waives the base price (after any replace pick) and keeps the options' charges.
  * Throws PricingError; `out_of_stock` when an option's stock key is out.
  */
 export function priceItem(item: { price: number; name?: string }, groups: OptionGroup[], picks: Pick[], o: PriceItemOptions = {}): PricedItem {
@@ -317,6 +322,7 @@ export function priceItem(item: { price: number; name?: string }, groups: Option
     });
   }
   const addCharges = selections.filter((s) => !s.replaces).reduce((s, x) => s + x.price + (x.followup?.price ?? 0), 0);
+  if (o.giftBase) return { unit: money(addCharges), extras: money(extras), selections, mods, base_gift: money(base) };
   return { unit: money(base + addCharges), extras: money(extras), selections, mods };
 }
 

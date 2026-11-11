@@ -479,6 +479,7 @@ export type Database = {
         Row: {
           components: Json
           gift: boolean
+          gift_base: number | null
           gift_unit: number | null
           given: number
           id: string
@@ -497,6 +498,7 @@ export type Database = {
         Insert: {
           components?: Json
           gift?: boolean
+          gift_base?: number | null
           gift_unit?: number | null
           given?: number
           id?: string
@@ -515,6 +517,7 @@ export type Database = {
         Update: {
           components?: Json
           gift?: boolean
+          gift_base?: number | null
           gift_unit?: number | null
           given?: number
           id?: string
@@ -879,6 +882,7 @@ export type Database = {
         Args: { p_components: Json; p_kinds: string[] }
         Returns: number
       }
+      customer_counts: { Args: { p_day?: string }; Returns: Json }
       customer_points: { Args: { p_phone: string }; Returns: Json }
       get_order: { Args: { p_id: string }; Returns: Json }
       insert_order: {
