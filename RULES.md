@@ -17,7 +17,7 @@ These rules apply in all Potaffle repositories. Each repo's `CLAUDE.md` imports 
 - **Release notes for every promotion** (Yazeed, 2026-11-12). Before merging `main` into `production`, the session writes on `main`:
   - `releases/<YYYY-MM-DD>.md` (`-2`, `-3` for more promotions the same day): first line `# <date> · <one-line summary>`, then "What changed" in plain words for Yazeed and the staff, then a short "Technical" part (migrations, functions, notable changes);
   - one line at the top of the table in `releases/README.md` (the index: date, summary, link).
-  Read only the index and the files you need, never the whole folder. `.github/workflows/release-notes.yml` (the same file in every repo, copied from `backend`) publishes each file without a release as a GitHub Release tagged `prod-<file name>` on the next push to `production`; files for past promotions carry a `Commit: <sha>` line. Yazeed reads them at github.com/Potaffle/<repo>/releases.
+  Read only the index and the files you need, never the whole folder. `.github/workflows/release-notes.yml` (the same file in every repo, copied from `backend`) publishes each file without a release as a GitHub Release tagged `prod-<file name>` on the next push to `production`; files for past promotions carry a `Commit: <sha>` line. Yazeed reads them at github.com/Potaffle/<repo>/releases. Those releases come from the promotion, which already has his `fsign`; a session never creates releases with `gh` itself.
 - Never commit secrets, tokens, passwords or `.env` files. Never paste a secret into chat; if one is pasted, say it is exposed and must be revoked.
 
 ## 3. Shared repo
