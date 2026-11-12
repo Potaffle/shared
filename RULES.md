@@ -2,6 +2,8 @@
 
 These rules apply in all Potaffle repositories. Each repo's `CLAUDE.md` imports this file with `@shared/RULES.md`.
 
+`ARCHITECTURE.md` (next to this file) explains the working model behind these rules (sessions, the coordinator, `fsign`, `/fclear` and `/finit`) and how the Potaffle system fits together. Read it at the start of a fresh session.
+
 ## 1. Scope of edits
 
 - A session edits only its own repository folder, meaning the folder it was opened in, wherever that is on the machine. Everything else is read-only. Sibling Potaffle repos may be read for context when they happen to be checked out nearby; otherwise read them on GitHub (`gh repo view Potaffle/<repo>` or `gh api repos/Potaffle/<repo>/contents/<path>`).

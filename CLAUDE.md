@@ -6,6 +6,7 @@ Brand assets, the TypeScript data contract and the rules every Potaffle session 
 
 - `brand/`: logos, fonts, icons. See `brand/README.md`.
 - `contract/`: `menu.ts` (catalog, prices, stock keys) and `orders.ts` (Order, OrderLine, status, payment). Change these only when the backend schema changes, and tell the other sessions in the commit message.
+- `ARCHITECTURE.md`: the working model and the system overview.
 - `RULES.md`: the rules. Edit only on Yazeed's instruction.
 
 This repo is small on purpose. No build, no dependencies.
