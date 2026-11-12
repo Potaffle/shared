@@ -942,10 +942,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      set_staff_whatsapp: {
-        Args: { p_email: string; p_on: boolean }
-        Returns: undefined
-      }
       set_user_role: {
         Args: { p_email: string; p_role: string }
         Returns: undefined
