@@ -39,6 +39,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_pin: {
+        Row: {
+          id: boolean
+          pin_hash: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          pin_hash: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          pin_hash?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      admin_pin_attempts: {
+        Row: {
+          at: string
+          user_id: string
+        }
+        Insert: {
+          at?: string
+          user_id: string
+        }
+        Update: {
+          at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       counter_screen: {
         Row: {
           cart: Json
@@ -869,8 +905,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_pin_is_set: { Args: never; Returns: boolean }
       auth_role: { Args: never; Returns: string }
       business_day: { Args: { ts?: string }; Returns: string }
+      check_admin_pin: { Args: { p_pin: string }; Returns: Json }
       close_earlier_days: {
         Args: never
         Returns: {
@@ -916,6 +954,7 @@ export type Database = {
       is_kitchen: { Args: never; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      is_staff_account: { Args: never; Returns: boolean }
       keypad_celebrate: { Args: { p_screen?: string }; Returns: string[] }
       keypad_phone: {
         Args: { p_phone: string; p_screen?: string }
@@ -932,6 +971,7 @@ export type Database = {
         Args: { p_customer: string; p_day?: string; p_skip_line?: string }
         Returns: Json
       }
+      set_admin_pin: { Args: { p_pin: string }; Returns: undefined }
       set_staff: {
         Args: {
           p_email: string
