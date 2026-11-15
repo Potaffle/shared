@@ -909,6 +909,7 @@ export type Database = {
       auth_role: { Args: never; Returns: string }
       business_day: { Args: { ts?: string }; Returns: string }
       check_admin_pin: { Args: { p_pin: string }; Returns: Json }
+      check_points: { Args: { p_phone: string }; Returns: Json }
       close_earlier_days: {
         Args: never
         Returns: {
