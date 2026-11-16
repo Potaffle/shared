@@ -46,7 +46,7 @@ These rules apply in all Potaffle repositories. Each repo's `CLAUDE.md` imports 
 
 ## 5a. What's new and wording (Yazeed, 2026-11-12)
 
-- Apps with a "What's new" pop-up (the Counter, `src/whats-new.json`): every feature or change staff will notice is added to that list in the same change that builds it, not only at promotion. Short, simple lines in Arabic (Jordanian amiyah), English and German. The list covers everything on `main` since the last production promotion and is reset after it.
+- Apps with a "What's new" pop-up (the Counter and, since 2026-11-16, the Admin app, each in `src/whats-new.json`; shown once per device per update, English first with a language switch): every feature or change staff will notice is added to that list in the same change that builds it, not only at promotion. Short, simple lines in Arabic (Jordanian amiyah), English and German. The list covers everything on `main` since the last production promotion and is reset after it.
 - In Arabic, "admin" is always «أدمين» (للأدمين، حسابات الأدمين), never مدراء. Don't name the admins in staff-facing text.
 
 ## 6. Documentation
