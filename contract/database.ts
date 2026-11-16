@@ -968,6 +968,16 @@ export type Database = {
       }
       next_order_num: { Args: never; Returns: number }
       order_counts: { Args: { p_day?: string }; Returns: Json }
+      order_counts_range: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          day: string
+          new_customers: number
+          numbers: number
+          orders: number
+          returning_customers: number
+        }[]
+      }
       points_of: {
         Args: { p_customer: string; p_day?: string; p_skip_line?: string }
         Returns: Json
