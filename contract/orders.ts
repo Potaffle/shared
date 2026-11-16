@@ -58,8 +58,10 @@ export interface Order {
   dayKey: string;
   /** ISO timestamp. */
   createdAt: string;
-  /** ISO timestamp of payment (approval at the counter, or creation for counter orders); null while pending or cancelled. */
+  /** ISO timestamp of payment (approval at the counter, or creation for counter orders); null while pending, while not paid, or for some cancelled orders. Set again to the moment staff mark a not-paid order paid. */
   paidAt: string | null;
+  /** orders.paid: false when staff marked the order not paid. Default true. Optional so older rows mapped without it count as paid. */
+  paid?: boolean;
   /** ISO timestamp the order was completed; null unless status is completed. */
   completedAt?: string | null;
   /** ISO timestamp the order was cancelled; null unless status is cancelled. */

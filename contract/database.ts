@@ -638,6 +638,7 @@ export type Database = {
           day_key: string
           id: string
           num: number
+          paid: boolean
           paid_at: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
@@ -657,6 +658,7 @@ export type Database = {
           day_key: string
           id?: string
           num: number
+          paid?: boolean
           paid_at?: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
@@ -676,6 +678,7 @@ export type Database = {
           day_key?: string
           id?: string
           num?: number
+          paid?: boolean
           paid_at?: string | null
           pay?: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
@@ -934,6 +937,7 @@ export type Database = {
           day_key: string
           id: string
           num: number
+          paid: boolean
           paid_at: string | null
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
