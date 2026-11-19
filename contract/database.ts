@@ -143,6 +143,36 @@ export type Database = {
         }
         Relationships: []
       }
+      kitchen_screen: {
+        Row: {
+          fullscreen: boolean
+          id: string
+          lang: string
+          reload_at: string | null
+          signout_at: string | null
+          theme: string
+          updated_at: string
+        }
+        Insert: {
+          fullscreen?: boolean
+          id?: string
+          lang?: string
+          reload_at?: string | null
+          signout_at?: string | null
+          theme?: string
+          updated_at?: string
+        }
+        Update: {
+          fullscreen?: boolean
+          id?: string
+          lang?: string
+          reload_at?: string | null
+          signout_at?: string | null
+          theme?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       legacy_daily_stats: {
         Row: {
           day: string
