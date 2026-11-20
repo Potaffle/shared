@@ -87,15 +87,13 @@ export type Database = {
           corrected_at: string | null
           corrected_by: string | null
           correction_note: string | null
-          day_from: string
-          day_to: string
+          day: string
           drawer_left: number
           drawer_start: number
           expected: number
           id: string
           note: string | null
           orders: number
-          period_start: string | null
         }
         Insert: {
           branch?: string
@@ -108,15 +106,13 @@ export type Database = {
           corrected_at?: string | null
           corrected_by?: string | null
           correction_note?: string | null
-          day_from: string
-          day_to: string
+          day: string
           drawer_left: number
           drawer_start: number
           expected: number
           id?: string
           note?: string | null
           orders?: number
-          period_start?: string | null
         }
         Update: {
           branch?: string
@@ -129,15 +125,13 @@ export type Database = {
           corrected_at?: string | null
           corrected_by?: string | null
           correction_note?: string | null
-          day_from?: string
-          day_to?: string
+          day?: string
           drawer_left?: number
           drawer_start?: number
           expected?: number
           id?: string
           note?: string | null
           orders?: number
-          period_start?: string | null
         }
         Relationships: []
       }
@@ -150,6 +144,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           created_by_name: string | null
+          day: string
           id: string
           kind: string
           note: string | null
@@ -163,6 +158,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name?: string | null
+          day?: string
           id?: string
           kind: string
           note?: string | null
@@ -176,6 +172,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name?: string | null
+          day?: string
           id?: string
           kind?: string
           note?: string | null
@@ -195,6 +192,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cash_closes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_moves_close_id_fkey"
+            columns: ["close_id"]
+            isOneToOne: false
+            referencedRelation: "cash_days"
+            referencedColumns: ["close_id"]
           },
         ]
       }
@@ -1208,8 +1212,7 @@ export type Database = {
           corrected_at: string | null
           corrected_by: string | null
           correction_note: string | null
-          day_from: string | null
-          day_to: string | null
+          day: string | null
           difference: number | null
           drawer_left: number | null
           drawer_start: number | null
@@ -1220,7 +1223,33 @@ export type Database = {
           money_out_personal: number | null
           note: string | null
           orders: number | null
-          period_start: string | null
+          taken_home: number | null
+        }
+        Relationships: []
+      }
+      cash_days: {
+        Row: {
+          actual: number | null
+          card: number | null
+          cash_counted: number | null
+          cliq: number | null
+          close_id: string | null
+          closed_at: string | null
+          closed_by_name: string | null
+          corrected_at: string | null
+          correction_note: string | null
+          day: string | null
+          difference: number | null
+          drawer_left: number | null
+          drawer_start: number | null
+          expected: number | null
+          money_out: number | null
+          money_out_expense: number | null
+          money_out_personal: number | null
+          note: string | null
+          orders: number | null
+          sales: number | null
+          status: string | null
           taken_home: number | null
         }
         Relationships: []
@@ -1370,6 +1399,7 @@ export type Database = {
           p_card: number
           p_cash: number
           p_cliq: number
+          p_day?: string
           p_left: number
           p_note?: string
           p_start?: number
@@ -1383,12 +1413,19 @@ export type Database = {
           completed: number
         }[]
       }
-      close_status: { Args: { p_branch?: string }; Returns: Json }
+      close_status: {
+        Args: { p_branch?: string; p_day?: string }
+        Returns: Json
+      }
       components_count: {
         Args: { p_components: Json; p_kinds: string[] }
         Returns: number
       }
       customer_points: { Args: { p_phone: string }; Returns: Json }
+      drawer_start_for: {
+        Args: { p_branch?: string; p_day: string }
+        Returns: number
+      }
       get_order: { Args: { p_id: string }; Returns: Json }
       insert_order: {
         Args: { p_lines: Json; p_order: Json }

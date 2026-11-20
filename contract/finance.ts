@@ -237,12 +237,12 @@ export function breakEven(i: BreakEvenInput): BreakEven {
 export const EXPENSE_CATEGORIES = ['gas', 'ingredients', 'packaging', 'cleaning', 'maintenance', 'other'] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
-/** close_day() result. */
+/** close_day() result (one business day). */
 export interface CloseResult {
   id: string;
-  day_from: string;
-  day_to: string;
+  day: string;
   orders: number;
+  drawer_start: number;
   expected: number;
   actual: number;
   difference: number;
@@ -250,13 +250,18 @@ export interface CloseResult {
   taken_home: number;
 }
 
-/** close_status() result (no money: blind count). */
+/** close_status(p_day?) result. No expected amount (blind count). `start` is null when it must be typed in. */
 export interface CloseStatus {
-  open_since: string;
-  last_closed_at: string | null;
-  last_day_to: string | null;
-  needs_start: boolean;
-  days: string[];
+  day: string;
   today: string;
+  closed: boolean;
+  needs_start: boolean;
+  start: number | null;
   money_out: number;
 }
+
+/** cash_days view: one row per business day. status 'open' is today. */
+export type CashDayStatus = 'closed' | 'open' | 'not_closed';
+
+/** A close counts as matched when the difference is under half a fils. */
+export const isMatched = (difference: number | null | undefined) => difference != null && Math.abs(difference) < 0.0005;
