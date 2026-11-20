@@ -75,6 +75,129 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_closes: {
+        Row: {
+          branch: string
+          card: number
+          cash_counted: number
+          cliq: number
+          closed_at: string
+          closed_by: string | null
+          closed_by_name: string | null
+          corrected_at: string | null
+          corrected_by: string | null
+          correction_note: string | null
+          day_from: string
+          day_to: string
+          drawer_left: number
+          drawer_start: number
+          expected: number
+          id: string
+          note: string | null
+          orders: number
+          period_start: string | null
+        }
+        Insert: {
+          branch?: string
+          card?: number
+          cash_counted: number
+          cliq?: number
+          closed_at?: string
+          closed_by?: string | null
+          closed_by_name?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_note?: string | null
+          day_from: string
+          day_to: string
+          drawer_left: number
+          drawer_start: number
+          expected: number
+          id?: string
+          note?: string | null
+          orders?: number
+          period_start?: string | null
+        }
+        Update: {
+          branch?: string
+          card?: number
+          cash_counted?: number
+          cliq?: number
+          closed_at?: string
+          closed_by?: string | null
+          closed_by_name?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_note?: string | null
+          day_from?: string
+          day_to?: string
+          drawer_left?: number
+          drawer_start?: number
+          expected?: number
+          id?: string
+          note?: string | null
+          orders?: number
+          period_start?: string | null
+        }
+        Relationships: []
+      }
+      cash_moves: {
+        Row: {
+          amount: number
+          branch: string
+          category: string | null
+          close_id: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          id: string
+          kind: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          branch?: string
+          category?: string | null
+          close_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          branch?: string
+          category?: string | null
+          close_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_moves_close_id_fkey"
+            columns: ["close_id"]
+            isOneToOne: false
+            referencedRelation: "cash_close_report"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_moves_close_id_fkey"
+            columns: ["close_id"]
+            isOneToOne: false
+            referencedRelation: "cash_closes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counter_screen: {
         Row: {
           cart: Json
@@ -142,6 +265,117 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          branch: string
+          category: string
+          created_at: string
+          created_by: string | null
+          day: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          amount: number
+          branch?: string
+          category: string
+          created_at?: string
+          created_by?: string | null
+          day?: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          amount?: number
+          branch?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          day?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
+      finance_settings: {
+        Row: {
+          days_open_month: number
+          id: string
+          round_to: number
+          updated_at: string
+        }
+        Insert: {
+          days_open_month?: number
+          id?: string
+          round_to?: number
+          updated_at?: string
+        }
+        Update: {
+          days_open_month?: number
+          id?: string
+          round_to?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ingredients: {
+        Row: {
+          active: boolean
+          id: string
+          mode: string
+          name: string
+          note: string | null
+          pack_qty: number | null
+          price: number
+          unit: string | null
+          updated_at: string
+          weekly_item_id: string | null
+          weekly_units_estimate: number | null
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          mode?: string
+          name: string
+          note?: string | null
+          pack_qty?: number | null
+          price: number
+          unit?: string | null
+          updated_at?: string
+          weekly_item_id?: string | null
+          weekly_units_estimate?: number | null
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          mode?: string
+          name?: string
+          note?: string | null
+          pack_qty?: number | null
+          price?: number
+          unit?: string | null
+          updated_at?: string
+          weekly_item_id?: string | null
+          weekly_units_estimate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_weekly_item_id_fkey"
+            columns: ["weekly_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "ingredients_weekly_item_id_fkey"
+            columns: ["weekly_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kitchen_screen: {
         Row: {
@@ -526,6 +760,42 @@ export type Database = {
           },
         ]
       }
+      monthly_costs: {
+        Row: {
+          active: boolean
+          amount: number
+          branch: string
+          category: string | null
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          sort: number
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          branch?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          sort?: number
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          branch?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          sort?: number
+        }
+        Relationships: []
+      }
       order_day_counters: {
         Row: {
           day_key: string
@@ -736,6 +1006,116 @@ export type Database = {
           },
         ]
       }
+      recipe_lines: {
+        Row: {
+          amount: number
+          id: string
+          ingredient_id: string | null
+          recipe_id: string
+          sort: number
+          sub_recipe_id: string | null
+          unit: string | null
+        }
+        Insert: {
+          amount: number
+          id?: string
+          ingredient_id?: string | null
+          recipe_id: string
+          sort?: number
+          sub_recipe_id?: string | null
+          unit?: string | null
+        }
+        Update: {
+          amount?: number
+          id?: string
+          ingredient_id?: string | null
+          recipe_id?: string
+          sort?: number
+          sub_recipe_id?: string | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_lines_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_lines_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_lines_sub_recipe_id_fkey"
+            columns: ["sub_recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          id: string
+          menu_item_id: string | null
+          menu_option_id: string | null
+          multiplier: number
+          name: string
+          note: string | null
+          updated_at: string
+          waste_pct: number
+          yield: number
+        }
+        Insert: {
+          id?: string
+          menu_item_id?: string | null
+          menu_option_id?: string | null
+          multiplier?: number
+          name: string
+          note?: string | null
+          updated_at?: string
+          waste_pct?: number
+          yield?: number
+        }
+        Update: {
+          id?: string
+          menu_item_id?: string | null
+          menu_option_id?: string | null
+          multiplier?: number
+          name?: string
+          note?: string | null
+          updated_at?: string
+          waste_pct?: number
+          yield?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipes_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: true
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "recipes_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: true
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipes_menu_option_id_fkey"
+            columns: ["menu_option_id"]
+            isOneToOne: true
+            referencedRelation: "menu_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           key: string
@@ -815,6 +1195,36 @@ export type Database = {
       }
     }
     Views: {
+      cash_close_report: {
+        Row: {
+          actual: number | null
+          branch: string | null
+          card: number | null
+          cash_counted: number | null
+          cliq: number | null
+          closed_at: string | null
+          closed_by: string | null
+          closed_by_name: string | null
+          corrected_at: string | null
+          corrected_by: string | null
+          correction_note: string | null
+          day_from: string | null
+          day_to: string | null
+          difference: number | null
+          drawer_left: number | null
+          drawer_start: number | null
+          expected: number | null
+          id: string | null
+          money_out: number | null
+          money_out_expense: number | null
+          money_out_personal: number | null
+          note: string | null
+          orders: number | null
+          period_start: string | null
+          taken_home: number | null
+        }
+        Relationships: []
+      }
       customer_stats: {
         Row: {
           created_at: string | null
@@ -860,6 +1270,16 @@ export type Database = {
           source: string | null
           student_offers: number | null
           waffles: number | null
+        }
+        Relationships: []
+      }
+      expense_months: {
+        Row: {
+          amount: number | null
+          branch: string | null
+          category: string | null
+          entries: number | null
+          month: string | null
         }
         Relationships: []
       }
@@ -941,8 +1361,21 @@ export type Database = {
       admin_pin_is_set: { Args: never; Returns: boolean }
       auth_role: { Args: never; Returns: string }
       business_day: { Args: { ts?: string }; Returns: string }
+      business_day_start: { Args: { p_day?: string }; Returns: string }
       check_admin_pin: { Args: { p_pin: string }; Returns: Json }
       check_points: { Args: { p_phone: string }; Returns: Json }
+      close_day: {
+        Args: {
+          p_branch?: string
+          p_card: number
+          p_cash: number
+          p_cliq: number
+          p_left: number
+          p_note?: string
+          p_start?: number
+        }
+        Returns: Json
+      }
       close_earlier_days: {
         Args: never
         Returns: {
@@ -950,6 +1383,7 @@ export type Database = {
           completed: number
         }[]
       }
+      close_status: { Args: { p_branch?: string }; Returns: Json }
       components_count: {
         Args: { p_components: Json; p_kinds: string[] }
         Returns: number
