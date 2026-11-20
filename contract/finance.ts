@@ -236,6 +236,9 @@ export function breakEven(i: BreakEvenInput): BreakEven {
 /** Money out categories (cash_moves, expenses, monthly_costs). */
 export const EXPENSE_CATEGORIES = ['gas', 'ingredients', 'packaging', 'cleaning', 'maintenance', 'other'] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+/** Categories offered when logging money out (Yazeed, 2026-11-20: gas and other only for now). The database still
+ * accepts all of EXPENSE_CATEGORIES, so older entries keep their label. */
+export const MONEY_OUT_CATEGORIES: readonly ExpenseCategory[] = ['gas', 'other'];
 
 /** close_day() result (one business day). */
 export interface CloseResult {
