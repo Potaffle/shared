@@ -164,6 +164,19 @@ export function costAll(data: CostData): Map<string, RecipeCost> {
   return out;
 }
 
+/**
+ * Cost of the Unknown sauce (Yazeed, 2026-11-20): it is not a recipe of its own but the plain average of the named
+ * sauces' cost with waste, over the sauces that have a complete recipe. null while no sauce has one.
+ */
+export function unknownSauceCost(sauceItemIds: string[], recipes: Recipe[], costs: Map<string, RecipeCost>): { cost: number; sauces: number } | null {
+  const vals = recipes
+    .filter((r) => r.menu_item_id && sauceItemIds.includes(r.menu_item_id))
+    .map((r) => costs.get(r.id))
+    .filter((c): c is RecipeCost => !!c && c.missing.length === 0)
+    .map((c) => c.withWaste);
+  return vals.length ? { cost: vals.reduce((a, b) => a + b, 0) / vals.length, sauces: vals.length } : null;
+}
+
 /** Share of the price that goes to ingredients, in percent; null without a price. */
 export const foodCostPct = (cost: number, price: number | null | undefined) => (price && price > 0 ? (cost / price) * 100 : null);
 
