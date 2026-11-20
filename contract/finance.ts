@@ -253,7 +253,7 @@ export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
  * accepts all of EXPENSE_CATEGORIES, so older entries keep their label. */
 export const MONEY_OUT_CATEGORIES: readonly ExpenseCategory[] = ['gas', 'other'];
 
-/** close_day() result (one business day). */
+/** close_day() result (one business day). taken_home = cash counted: nothing stays in the drawer. */
 export interface CloseResult {
   id: string;
   day: string;
@@ -266,18 +266,20 @@ export interface CloseResult {
   taken_home: number;
 }
 
-/** close_status(p_day?) result. No expected amount (blind count). `start` is null when it must be typed in. */
-export interface CloseStatus {
+/** Today's cash day for every staff screen: cash_day_state(), and the cash_state row on Realtime. */
+export type CashDayState = 'not_started' | 'open' | 'closed';
+export interface CashDayInfo {
   day: string;
-  today: string;
-  closed: boolean;
-  needs_start: boolean;
+  state: CashDayState;
   start: number | null;
-  money_out: number;
+  opened_at: string | null;
 }
+/** A cash_state row applies only to its own day; any other day means today is not started yet. */
+export const stateForToday = (row: { day: string; state: 'open' | 'closed' } | null | undefined, today: string): CashDayState =>
+  row && row.day === today ? row.state : 'not_started';
 
-/** cash_days view: one row per business day. status 'open' is today. */
-export type CashDayStatus = 'closed' | 'open' | 'not_closed';
+/** cash_days view: one row per business day. */
+export type CashDayStatus = 'closed' | 'open' | 'not_started' | 'not_closed';
 
 /** A close counts as matched when the difference is under half a fils. */
 export const isMatched = (difference: number | null | undefined) => difference != null && Math.abs(difference) < 0.0005;

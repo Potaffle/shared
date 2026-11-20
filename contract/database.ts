@@ -79,9 +79,9 @@ export type Database = {
         Row: {
           branch: string
           card: number
-          cash_counted: number
+          cash_counted: number | null
           cliq: number
-          closed_at: string
+          closed_at: string | null
           closed_by: string | null
           closed_by_name: string | null
           corrected_at: string | null
@@ -90,36 +90,46 @@ export type Database = {
           day: string
           drawer_left: number
           drawer_start: number
-          expected: number
+          expected: number | null
           id: string
           note: string | null
+          opened_at: string
+          opened_by: string | null
+          opened_by_name: string | null
           orders: number
+          reopened_at: string | null
+          status: string
         }
         Insert: {
           branch?: string
           card?: number
-          cash_counted: number
+          cash_counted?: number | null
           cliq?: number
-          closed_at?: string
+          closed_at?: string | null
           closed_by?: string | null
           closed_by_name?: string | null
           corrected_at?: string | null
           corrected_by?: string | null
           correction_note?: string | null
           day: string
-          drawer_left: number
+          drawer_left?: number
           drawer_start: number
-          expected: number
+          expected?: number | null
           id?: string
           note?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opened_by_name?: string | null
           orders?: number
+          reopened_at?: string | null
+          status?: string
         }
         Update: {
           branch?: string
           card?: number
-          cash_counted?: number
+          cash_counted?: number | null
           cliq?: number
-          closed_at?: string
+          closed_at?: string | null
           closed_by?: string | null
           closed_by_name?: string | null
           corrected_at?: string | null
@@ -128,10 +138,15 @@ export type Database = {
           day?: string
           drawer_left?: number
           drawer_start?: number
-          expected?: number
+          expected?: number | null
           id?: string
           note?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opened_by_name?: string | null
           orders?: number
+          reopened_at?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -201,6 +216,27 @@ export type Database = {
             referencedColumns: ["close_id"]
           },
         ]
+      }
+      cash_state: {
+        Row: {
+          branch: string
+          day: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          branch: string
+          day: string
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          branch?: string
+          day?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       counter_screen: {
         Row: {
@@ -1222,7 +1258,12 @@ export type Database = {
           money_out_expense: number | null
           money_out_personal: number | null
           note: string | null
+          opened_at: string | null
+          opened_by: string | null
+          opened_by_name: string | null
           orders: number | null
+          reopened_at: string | null
+          status: string | null
           taken_home: number | null
         }
         Relationships: []
@@ -1240,14 +1281,16 @@ export type Database = {
           correction_note: string | null
           day: string | null
           difference: number | null
-          drawer_left: number | null
           drawer_start: number | null
           expected: number | null
           money_out: number | null
           money_out_expense: number | null
           money_out_personal: number | null
           note: string | null
+          opened_at: string | null
+          opened_by_name: string | null
           orders: number | null
+          reopened_at: string | null
           sales: number | null
           status: string | null
           taken_home: number | null
@@ -1391,6 +1434,11 @@ export type Database = {
       auth_role: { Args: never; Returns: string }
       business_day: { Args: { ts?: string }; Returns: string }
       business_day_start: { Args: { p_day?: string }; Returns: string }
+      cash_day_open: {
+        Args: { p_branch?: string; p_day: string }
+        Returns: boolean
+      }
+      cash_day_state: { Args: { p_branch?: string }; Returns: Json }
       check_admin_pin: { Args: { p_pin: string }; Returns: Json }
       check_points: { Args: { p_phone: string }; Returns: Json }
       close_day: {
@@ -1400,7 +1448,6 @@ export type Database = {
           p_cash: number
           p_cliq: number
           p_day?: string
-          p_left: number
           p_note?: string
           p_start?: number
         }
@@ -1413,19 +1460,11 @@ export type Database = {
           completed: number
         }[]
       }
-      close_status: {
-        Args: { p_branch?: string; p_day?: string }
-        Returns: Json
-      }
       components_count: {
         Args: { p_components: Json; p_kinds: string[] }
         Returns: number
       }
       customer_points: { Args: { p_phone: string }; Returns: Json }
-      drawer_start_for: {
-        Args: { p_branch?: string; p_day: string }
-        Returns: number
-      }
       get_order: { Args: { p_id: string }; Returns: Json }
       insert_order: {
         Args: { p_lines: Json; p_order: Json }
@@ -1472,6 +1511,7 @@ export type Database = {
         Returns: Json
       }
       next_order_num: { Args: never; Returns: number }
+      open_day: { Args: { p_branch?: string; p_start: number }; Returns: Json }
       order_counts: { Args: { p_day?: string }; Returns: Json }
       order_counts_range: {
         Args: { p_from: string; p_to: string }
@@ -1487,6 +1527,7 @@ export type Database = {
         Args: { p_customer: string; p_day?: string; p_skip_line?: string }
         Returns: Json
       }
+      reopen_day: { Args: { p_branch?: string; p_day?: string }; Returns: Json }
       set_admin_pin: { Args: { p_pin: string }; Returns: undefined }
       set_staff: {
         Args: {
@@ -1503,6 +1544,10 @@ export type Database = {
         Returns: undefined
       }
       stock_key_in_use: { Args: { p_key: string }; Returns: boolean }
+      sync_cash_state: {
+        Args: { p_branch: string; p_day: string }
+        Returns: undefined
+      }
     }
     Enums: {
       menu_config: "none" | "sauces" | "tops"
