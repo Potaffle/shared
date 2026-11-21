@@ -80,7 +80,7 @@ export function itemConfigs(item: Pick<CatalogItem, 'cfg' | 'components'>): Item
 
 export const SAUCES = ['Potaffle Sauce', 'Golden Onion Sauce', 'Spicy Ninja Sauce', 'Ketchup', 'Mayonnaise', 'Mustard'];
 /** Price of each sauce beyond the first free one, and of a sauce in a separate container. */
-export const SAUCE_EXTRA = 0.25;
+export const SAUCE_EXTRA = 0.5;
 
 export const CLASSIC = 'Classic';
 export const TOPPINGS: { name: string; price: number }[] = [
@@ -109,10 +109,8 @@ export const CATALOG: Record<Category, CatalogItem[]> = {
   ],
   sauces: SAUCES.map((s) => ({ kind: 'sauce' as const, name: s, sub: 'Separate container', price: SAUCE_EXTRA })),
   drinks: [
-    { kind: 'water', name: 'Water', price: 0.25 },
-    { kind: 'cola', name: 'Cola', price: 0.5 },
-    { kind: 'sprite', name: 'Sprite', price: 0.5 },
-    { kind: 'fanta', name: 'Fanta', price: 0.5 },
+    { kind: 'water', name: 'Water', price: 0.5 },
+    { kind: 'cola', name: 'Soft Drink', price: 0.5 },
   ],
 };
 
