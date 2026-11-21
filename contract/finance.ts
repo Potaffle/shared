@@ -266,20 +266,34 @@ export interface CloseResult {
   taken_home: number;
 }
 
-/** Today's cash day for every staff screen: cash_day_state(), and the cash_state row on Realtime. */
-export type CashDayState = 'not_started' | 'open' | 'closed';
+/** Today's cash day for every staff screen: cash_day_state(), and the cash_state row on Realtime.
+ * not_tracked: before cash_state.tracking_from (the day after the cash day reached the project); every screen works
+ * as it did before the cash day existed. */
+export type CashDayState = 'not_tracked' | 'not_started' | 'open' | 'closed';
 export interface CashDayInfo {
   day: string;
   state: CashDayState;
+  tracking_from: string;
   start: number | null;
   opened_at: string | null;
 }
-/** A cash_state row applies only to its own day; any other day means today is not started yet. */
-export const stateForToday = (row: { day: string; state: 'open' | 'closed' } | null | undefined, today: string): CashDayState =>
-  row && row.day === today ? row.state : 'not_started';
+export interface CashStateRow {
+  day: string | null;
+  state: 'open' | 'closed' | null;
+  tracking_from: string | null;
+}
+/** Today's state from the cash_state row. A row for another day means no cash day today: not started, or not
+ * tracked yet before tracking_from. Missing row: not tracked (the backend has not set a date yet). */
+export function stateForToday(row: CashStateRow | null | undefined, today: string): CashDayState {
+  if (row && row.day === today && row.state) return row.state;
+  if (!row || !row.tracking_from || today < row.tracking_from) return 'not_tracked';
+  return 'not_started';
+}
+/** The dashboard, the kitchen board and the keypad work normally in these states. */
+export const cashDayAllowsWork = (s: CashDayState) => s === 'open' || s === 'not_tracked';
 
 /** cash_days view: one row per business day. */
-export type CashDayStatus = 'closed' | 'open' | 'not_started' | 'not_closed';
+export type CashDayStatus = 'closed' | 'open' | 'not_started' | 'not_closed' | 'not_tracked';
 
 /** A close counts as matched when the difference is under half a fils. */
 export const isMatched = (difference: number | null | undefined) => difference != null && Math.abs(difference) < 0.0005;

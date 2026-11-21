@@ -220,20 +220,23 @@ export type Database = {
       cash_state: {
         Row: {
           branch: string
-          day: string
-          state: string
+          day: string | null
+          state: string | null
+          tracking_from: string | null
           updated_at: string
         }
         Insert: {
           branch: string
-          day: string
-          state: string
+          day?: string | null
+          state?: string | null
+          tracking_from?: string | null
           updated_at?: string
         }
         Update: {
           branch?: string
-          day?: string
-          state?: string
+          day?: string | null
+          state?: string | null
+          tracking_from?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1439,6 +1442,7 @@ export type Database = {
         Returns: boolean
       }
       cash_day_state: { Args: { p_branch?: string }; Returns: Json }
+      cash_tracking_from: { Args: { p_branch?: string }; Returns: string }
       check_admin_pin: { Args: { p_pin: string }; Returns: Json }
       check_points: { Args: { p_phone: string }; Returns: Json }
       close_day: {
