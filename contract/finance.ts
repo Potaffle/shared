@@ -165,6 +165,76 @@ export function costAll(data: CostData): Map<string, RecipeCost> {
 }
 
 /**
+ * Cost history (Yazeed, 2026-11-22): past days keep the costs they had. `cost_history` (backend 20261122180000) has one
+ * version of every ingredient, recipe and recipe line per business day of a change (no names; data null = deleted).
+ */
+export interface CostVersion {
+  tbl: 'ingredients' | 'recipes' | 'recipe_lines';
+  row_id: string;
+  /** Business day of the change; 2000-01-01 is the baseline. */
+  day: string;
+  data: Record<string, unknown> | null;
+}
+
+/** The ingredients, recipes and lines as they stood at the end of business day `day` (YYYY-MM-DD). Names are empty. */
+export function costDataOn(versions: readonly CostVersion[], day: string): CostData {
+  const last = new Map<string, CostVersion>();
+  for (const v of versions) {
+    if (v.day > day) continue;
+    const key = `${v.tbl}:${v.row_id}`;
+    const have = last.get(key);
+    if (!have || have.day < v.day) last.set(key, v);
+  }
+  const out: CostData = { ingredients: [], recipes: [], lines: [] };
+  const num = (x: unknown) => (x == null ? null : Number(x));
+  for (const v of last.values()) {
+    const d = v.data;
+    if (!d) continue;
+    if (v.tbl === 'ingredients') {
+      out.ingredients.push({ ...(d as unknown as Ingredient), name: '', price: Number(d.price), pack_qty: num(d.pack_qty), weekly_units_estimate: num(d.weekly_units_estimate) });
+    } else if (v.tbl === 'recipes') {
+      out.recipes.push({ ...(d as unknown as Recipe), name: '', yield: Number(d.yield), waste_pct: Number(d.waste_pct), multiplier: Number(d.multiplier) });
+    } else {
+      out.lines.push({ ...(d as unknown as RecipeLine), amount: Number(d.amount) });
+    }
+  }
+  return out;
+}
+
+/**
+ * Looks a cost up as it was on a past day. `pick` reads one cost from a day's recipes and costs (null: no complete
+ * recipe). An item that had no cost yet on `day` takes the first one it got later, so a recipe entered late fills the
+ * gap once; after that the past does not move. Edits made today count for today and later only.
+ */
+export function costHistory(versions: readonly CostVersion[], weekly: WeeklyUnits = {}) {
+  const days = [...new Set(versions.map((v) => v.day))].sort();
+  const cache = new Map<string, { recipes: Recipe[]; costs: Map<string, RecipeCost> }>();
+  const at = (day: string) => {
+    let c = cache.get(day);
+    if (!c) {
+      const data = costDataOn(versions, day);
+      const withLines = new Set(data.lines.map((l) => l.recipe_id));
+      // A recipe without lines has no cost yet (not a cost of 0).
+      c = { recipes: data.recipes.filter((r) => withLines.has(r.id)), costs: costAll({ ...data, weekly }) };
+      cache.set(day, c);
+    }
+    return c;
+  };
+  return {
+    costOn(day: string, pick: (recipes: Recipe[], costs: Map<string, RecipeCost>) => number | null): number | null {
+      let from = -1;
+      for (let i = 0; i < days.length && days[i] <= day; i++) from = i;
+      for (let i = Math.max(from, 0); i < days.length; i++) {
+        const c = at(days[i]);
+        const v = pick(c.recipes, c.costs);
+        if (v !== null) return v;
+      }
+      return null;
+    },
+  };
+}
+
+/**
  * Cost of the Unknown sauce (Yazeed, 2026-11-20): it is not a recipe of its own but the plain average of the named
  * sauces' cost with waste, over the sauces that have a complete recipe. null while no sauce has one.
  */

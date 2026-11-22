@@ -241,6 +241,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cost_history: {
+        Row: {
+          changed_at: string
+          data: Json | null
+          day: string
+          row_id: string
+          tbl: string
+        }
+        Insert: {
+          changed_at?: string
+          data?: Json | null
+          day: string
+          row_id: string
+          tbl: string
+        }
+        Update: {
+          changed_at?: string
+          data?: Json | null
+          day?: string
+          row_id?: string
+          tbl?: string
+        }
+        Relationships: []
+      }
       counter_screen: {
         Row: {
           cart: Json
