@@ -1431,6 +1431,34 @@ export type Database = {
           },
         ]
       }
+      sauce_sales: {
+        Row: {
+          day: string | null
+          free: number | null
+          gift: number | null
+          menu_item_id: string | null
+          name: string | null
+          paid: number | null
+          qty: number | null
+          revenue: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_pin_is_set: { Args: never; Returns: boolean }
