@@ -3,8 +3,9 @@
 //
 // Item cost:  batch cost = sum of recipe lines; cost per portion = batch / portions;
 //             with waste = per portion x (1 + waste%); recommended price = with waste x multiplier, rounded up.
-// Sizes (2026-11-23): 1 ml counts as 1 g. A recipe's size is the sum of its lines in grams; with a portion size set,
-//             portions = size / portion size, otherwise portions = yield. A sub-recipe used by weight or volume costs
+// Sizes (2026-11-23): 1 ml counts as 1 g. A recipe's size is the sum of its lines in grams. The user sets how many
+//             portions it makes (yield); one portion's size = size / portions is shown live. (portion_size, if ever
+//             set, makes portions = size / portion size instead; the Admin app does not set it.) A sub-recipe used by weight or volume costs
 //             that share of its size (with its waste); used in portions, portions x its cost with waste.
 // Supplies (2026-11-23): cones, boxes, cups, oil, gas: not part of any recipe; their cost goes straight onto menu items
 //             and options (supplyCostFor), with no waste added.
@@ -162,8 +163,10 @@ export interface RecipeCost {
   batch: number;
   /** The batch size in grams (1 ml = 1 g); null when a line's size is unknown or there are no lines. */
   totalGrams: number | null;
-  /** Portions: size / portion size when both are known, otherwise yield. */
+  /** Portions: yield (what the user sets); size / portion_size only where a portion size is stored. */
   portions: number;
+  /** One portion in grams (size / portions), shown live next to the portions; null without a size. */
+  portionGrams: number | null;
   /** Whether portions came from the sizes (false: yield, or the size is unknown). */
   portionsFromSize: boolean;
   perPortion: number;
@@ -222,7 +225,7 @@ export function costAll(data: CostData): Map<string, RecipeCost> {
     if (done) return done;
     const r = rec.get(id);
     if (!r || visiting.has(id)) {
-      return { recipeId: id, batch: 0, totalGrams: null, portions: 1, portionsFromSize: false, perPortion: 0, withWaste: 0, perGramWithWaste: null, recommended: 0, lines: [], missing: [id], unsized: [id] };
+      return { recipeId: id, batch: 0, totalGrams: null, portions: 1, portionGrams: null, portionsFromSize: false, perPortion: 0, withWaste: 0, perGramWithWaste: null, recommended: 0, lines: [], missing: [id], unsized: [id] };
     }
     visiting.add(id);
     let batch = 0;
@@ -268,6 +271,7 @@ export function costAll(data: CostData): Map<string, RecipeCost> {
       batch,
       totalGrams,
       portions,
+      portionGrams: totalGrams !== null && portions > 0 ? totalGrams / portions : null,
       portionsFromSize,
       perPortion,
       withWaste,
