@@ -99,6 +99,7 @@ export type Database = {
           orders: number
           reopened_at: string | null
           status: string
+          total_only: boolean
         }
         Insert: {
           branch?: string
@@ -123,6 +124,7 @@ export type Database = {
           orders?: number
           reopened_at?: string | null
           status?: string
+          total_only?: boolean
         }
         Update: {
           branch?: string
@@ -147,6 +149,7 @@ export type Database = {
           orders?: number
           reopened_at?: string | null
           status?: string
+          total_only?: boolean
         }
         Relationships: []
       }
@@ -1396,6 +1399,7 @@ export type Database = {
           reopened_at: string | null
           status: string | null
           taken_home: number | null
+          total_only: boolean | null
         }
         Relationships: []
       }
@@ -1425,6 +1429,7 @@ export type Database = {
           sales: number | null
           status: string | null
           taken_home: number | null
+          total_only: boolean | null
         }
         Relationships: []
       }
@@ -1490,12 +1495,14 @@ export type Database = {
         Row: {
           category: string | null
           day: string | null
+          gift: number | null
           kind: string | null
           menu_item_id: string | null
           name: string | null
           orders: number | null
           qty: number | null
           revenue: number | null
+          reward: number | null
         }
         Relationships: [
           {
@@ -1532,6 +1539,7 @@ export type Database = {
         Row: {
           component: string | null
           day: string | null
+          gift_qty: number | null
           group_name: string | null
           item_name: string | null
           kind: string | null
