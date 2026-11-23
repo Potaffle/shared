@@ -395,6 +395,8 @@ export type Database = {
           name: string
           note: string | null
           pack_qty: number | null
+          piece_size: number | null
+          piece_unit: string | null
           price: number
           unit: string | null
           updated_at: string
@@ -408,6 +410,8 @@ export type Database = {
           name: string
           note?: string | null
           pack_qty?: number | null
+          piece_size?: number | null
+          piece_unit?: string | null
           price: number
           unit?: string | null
           updated_at?: string
@@ -421,6 +425,8 @@ export type Database = {
           name?: string
           note?: string | null
           pack_qty?: number | null
+          piece_size?: number | null
+          piece_unit?: string | null
           price?: number
           unit?: string | null
           updated_at?: string
@@ -1133,6 +1139,9 @@ export type Database = {
           multiplier: number
           name: string
           note: string | null
+          portion_size: number | null
+          portion_unit: string | null
+          size_unit: string | null
           updated_at: string
           waste_pct: number
           yield: number
@@ -1144,6 +1153,9 @@ export type Database = {
           multiplier?: number
           name: string
           note?: string | null
+          portion_size?: number | null
+          portion_unit?: string | null
+          size_unit?: string | null
           updated_at?: string
           waste_pct?: number
           yield?: number
@@ -1155,6 +1167,9 @@ export type Database = {
           multiplier?: number
           name?: string
           note?: string | null
+          portion_size?: number | null
+          portion_unit?: string | null
+          size_unit?: string | null
           updated_at?: string
           waste_pct?: number
           yield?: number
@@ -1218,6 +1233,95 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      supplies: {
+        Row: {
+          active: boolean
+          id: string
+          name: string
+          note: string | null
+          pack_qty: number
+          price: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          name: string
+          note?: string | null
+          pack_qty: number
+          price: number
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          name?: string
+          note?: string | null
+          pack_qty?: number
+          price?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      supply_uses: {
+        Row: {
+          id: string
+          menu_item_id: string | null
+          menu_option_id: string | null
+          qty: number
+          supply_id: string
+          unit: string
+        }
+        Insert: {
+          id?: string
+          menu_item_id?: string | null
+          menu_option_id?: string | null
+          qty: number
+          supply_id: string
+          unit: string
+        }
+        Update: {
+          id?: string
+          menu_item_id?: string | null
+          menu_option_id?: string | null
+          qty?: number
+          supply_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supply_uses_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "supply_uses_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supply_uses_menu_option_id_fkey"
+            columns: ["menu_option_id"]
+            isOneToOne: false
+            referencedRelation: "menu_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supply_uses_supply_id_fkey"
+            columns: ["supply_id"]
+            isOneToOne: false
+            referencedRelation: "supplies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_messages: {
         Row: {

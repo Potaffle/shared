@@ -1,8 +1,13 @@
 // Finance calculations (Yazeed, 2026-11-20). Tables: backend migration 20261120100000_finance.
 // Pure functions, no I/O: the apps load rows and call these, so every screen computes costs the same way.
 //
-// Item cost:  batch cost = sum of recipe lines; cost per portion = batch / yield;
+// Item cost:  batch cost = sum of recipe lines; cost per portion = batch / portions;
 //             with waste = per portion x (1 + waste%); recommended price = with waste x multiplier, rounded up.
+// Sizes (2026-11-23): 1 ml counts as 1 g. A recipe's size is the sum of its lines in grams; with a portion size set,
+//             portions = size / portion size, otherwise portions = yield. A sub-recipe used by weight or volume costs
+//             that share of its size (with its waste); used in portions, portions x its cost with waste.
+// Supplies (2026-11-23): cones, boxes, cups, oil, gas: not part of any recipe; their cost goes straight onto menu items
+//             and options (supplyCostFor), with no waste added.
 // Weekly ingredients (frying oil): cost per week / units of their menu item sold per week (or the estimate).
 // Break-even: gross profit % = (sales - ingredient cost) / sales; daily target = monthly costs / gross % / days open.
 
@@ -17,6 +22,9 @@ export interface Ingredient {
   price: number;
   weekly_item_id: string | null;
   weekly_units_estimate: number | null;
+  /** Bought by the piece: how big one piece is (needed for the recipe size and to use it by weight or volume). */
+  piece_size?: number | null;
+  piece_unit?: Unit | null;
   active?: boolean;
 }
 
@@ -28,6 +36,31 @@ export interface Recipe {
   yield: number;
   waste_pct: number;
   multiplier: number;
+  /** One portion's size; with it, portions = recipe size / portion size (yield is the fallback). */
+  portion_size?: number | null;
+  portion_unit?: Unit | null;
+  /** How the recipe size is shown (g, kg, ml, l); display only. */
+  size_unit?: Unit | null;
+}
+
+/** A supply (cone, waffle box, sauce cup, oil, gas): bought as pack_qty of unit for price. */
+export interface Supply {
+  id: string;
+  name: string;
+  pack_qty: number;
+  unit: Unit;
+  price: number;
+  active?: boolean;
+}
+
+/** How much of a supply one unit of a menu item or option takes. */
+export interface SupplyUse {
+  id: string;
+  supply_id: string;
+  menu_item_id: string | null;
+  menu_option_id: string | null;
+  qty: number;
+  unit: Unit;
 }
 
 export interface RecipeLine {
@@ -73,6 +106,27 @@ export function toBase(qty: number, unit: Unit, like?: Unit): number | null {
   return qty * BASE[unit].factor;
 }
 
+/** Grams, counting 1 ml as 1 g; null for pieces. */
+export function toGrams(qty: number, unit: Unit | null | undefined): number | null {
+  if (!unit || unit === 'piece') return null;
+  return qty * BASE[unit].factor;
+}
+
+/** Grams shown in `unit` (g, kg, ml, l; 1 ml = 1 g). */
+export const fromGrams = (grams: number, unit: Unit) => (unit === 'piece' ? grams : grams / BASE[unit].factor);
+
+/** One piece of an ingredient in grams, if its piece size is set. */
+export const pieceGrams = (i: Pick<Ingredient, 'piece_size' | 'piece_unit'>) => (i.piece_size && i.piece_unit ? toGrams(i.piece_size, i.piece_unit) : null);
+
+/** Units a recipe line may use for this ingredient: its own family, g/kg/ml/l for anything weighed (1 ml = 1 g), and
+ * both pieces and weight when a piece size is set. Weekly ingredients count in portions (no unit). */
+export function lineUnitsFor(i: Ingredient): Unit[] {
+  if (i.mode === 'weekly' || !i.unit) return [];
+  const weights: Unit[] = ['g', 'kg', 'ml', 'l'];
+  if (i.unit === 'piece') return pieceGrams(i) ? ['piece', ...weights] : ['piece'];
+  return pieceGrams(i) ? [...weights, 'piece'] : weights;
+}
+
 export const money = (n: number) => Math.round(n * 1000) / 1000;
 
 /** Round up to the next step (0.050 by default): prices people can pay. */
@@ -95,22 +149,63 @@ export function ingredientUnitCost(ing: Ingredient, weekly: WeeklyUnits = {}): n
   return base ? ing.price / base : null;
 }
 
+/** One line of a recipe: its cost in the batch and its size in grams (null: unknown). */
+export interface LineCost {
+  lineId: string;
+  cost: number | null;
+  grams: number | null;
+}
+
 export interface RecipeCost {
   recipeId: string;
+  /** Cost of the whole batch (unrounded since 2026-11-23; round only to show it). */
   batch: number;
+  /** The batch size in grams (1 ml = 1 g); null when a line's size is unknown or there are no lines. */
+  totalGrams: number | null;
+  /** Portions: size / portion size when both are known, otherwise yield. */
+  portions: number;
+  /** Whether portions came from the sizes (false: yield, or the size is unknown). */
+  portionsFromSize: boolean;
   perPortion: number;
   withWaste: number;
+  /** Cost of one gram with waste; null without a size. */
+  perGramWithWaste: number | null;
   recommended: number;
-  /** Lines that could not be priced (missing unit, weekly ingredient without sales or estimate, broken link). */
+  /** Each line's cost and size, for the recipe screen's chart. */
+  lines: LineCost[];
+  /** Lines that could not be priced (missing unit or piece size, weekly ingredient without sales or estimate,
+   * sub-recipe without a size used by weight, broken link). */
   missing: string[];
+  /** Lines whose size is unknown (a piece without a piece size, a weekly ingredient). */
+  unsized: string[];
 }
 
 export interface CostData {
   ingredients: Ingredient[];
   recipes: Recipe[];
   lines: RecipeLine[];
+  supplies?: Supply[];
+  supplyUses?: SupplyUse[];
   weekly?: WeeklyUnits;
   roundTo?: number;
+}
+
+/** Cost and grams of `amount` `unit` of an ingredient on a line; null parts are unknown. */
+export function ingredientLine(i: Ingredient, amount: number, unit: Unit | null, weekly: WeeklyUnits = {}): { cost: number | null; grams: number | null } {
+  if (i.mode === 'weekly') {
+    const unitCost = ingredientUnitCost(i, weekly);
+    return { cost: unitCost === null ? null : unitCost * amount, grams: null };
+  }
+  if (!i.pack_qty || !i.unit || !unit) return { cost: null, grams: null };
+  const piece = pieceGrams(i);
+  const grams = unit === 'piece' ? (piece === null ? null : amount * piece) : toGrams(amount, unit);
+  if (i.unit === 'piece') {
+    const perPiece = i.price / i.pack_qty;
+    if (unit === 'piece') return { cost: perPiece * amount, grams };
+    return { cost: piece && grams !== null ? perPiece * (grams / piece) : null, grams };
+  }
+  const packGrams = toGrams(i.pack_qty, i.unit);
+  return { cost: packGrams && grams !== null ? (i.price / packGrams) * grams : null, grams };
 }
 
 /** Costs for every recipe. Sub-recipes count by their cost per portion including their own waste. */
@@ -126,35 +221,61 @@ export function costAll(data: CostData): Map<string, RecipeCost> {
     const done = out.get(id);
     if (done) return done;
     const r = rec.get(id);
-    if (!r || visiting.has(id)) return { recipeId: id, batch: 0, perPortion: 0, withWaste: 0, recommended: 0, missing: [id] };
+    if (!r || visiting.has(id)) {
+      return { recipeId: id, batch: 0, totalGrams: null, portions: 1, portionsFromSize: false, perPortion: 0, withWaste: 0, perGramWithWaste: null, recommended: 0, lines: [], missing: [id], unsized: [id] };
+    }
     visiting.add(id);
     let batch = 0;
+    let grams: number | null = 0;
     const missing: string[] = [];
-    for (const l of linesOf.get(id) ?? []) {
+    const unsized: string[] = [];
+    const lineCosts: LineCost[] = [];
+    const own = linesOf.get(id) ?? [];
+    for (const l of own) {
+      let c: { cost: number | null; grams: number | null } = { cost: null, grams: null };
       if (l.ingredient_id) {
         const i = ing.get(l.ingredient_id);
-        const unitCost = i ? ingredientUnitCost(i, data.weekly) : null;
-        if (!i || unitCost === null) { missing.push(l.id); continue; }
-        if (i.mode === 'weekly') { batch += unitCost * l.amount; continue; }
-        const qty = l.unit && i.unit ? toBase(l.amount, l.unit, i.unit) : null;
-        if (qty === null) { missing.push(l.id); continue; }
-        batch += unitCost * qty;
+        if (i) c = ingredientLine(i, l.amount, l.unit, data.weekly);
       } else if (l.sub_recipe_id) {
         const sub = cost(l.sub_recipe_id);
-        if (sub.missing.length) missing.push(l.id);
-        batch += sub.withWaste * l.amount;
+        const broken = sub.missing.length > 0;
+        if (!l.unit) {
+          // Portions of the sub-recipe.
+          const portionGrams = sub.totalGrams !== null && sub.portions > 0 ? sub.totalGrams / sub.portions : null;
+          c = { cost: broken ? null : sub.withWaste * l.amount, grams: portionGrams === null ? null : portionGrams * l.amount };
+        } else {
+          // An amount by weight or volume: that share of the sub-recipe's size.
+          const g = toGrams(l.amount, l.unit);
+          c = { cost: broken || g === null || sub.perGramWithWaste === null ? null : sub.perGramWithWaste * g, grams: g };
+        }
       }
+      if (c.cost === null) missing.push(l.id);
+      else batch += c.cost;
+      if (c.grams === null) unsized.push(l.id);
+      else if (grams !== null) grams += c.grams;
+      lineCosts.push({ lineId: l.id, cost: c.cost, grams: c.grams });
     }
     visiting.delete(id);
-    const perPortion = batch / (r.yield > 0 ? r.yield : 1);
-    const withWaste = perPortion * (1 + r.waste_pct / 100);
-    const result = {
+    const totalGrams = own.length && unsized.length === 0 ? grams : null;
+    const portionGrams = r.portion_size && r.portion_unit ? toGrams(r.portion_size, r.portion_unit) : null;
+    const portionsFromSize = totalGrams !== null && totalGrams > 0 && portionGrams !== null && portionGrams > 0;
+    const portions = portionsFromSize ? totalGrams! / portionGrams! : r.yield > 0 ? r.yield : 1;
+    const perPortion = batch / portions;
+    const factor = 1 + r.waste_pct / 100;
+    const withWaste = perPortion * factor;
+    const result: RecipeCost = {
       recipeId: id,
-      batch: money(batch),
+      batch,
+      totalGrams,
+      portions,
+      portionsFromSize,
       perPortion,
       withWaste,
+      perGramWithWaste: totalGrams !== null && totalGrams > 0 ? (batch * factor) / totalGrams : null,
       recommended: roundUp(withWaste * r.multiplier, data.roundTo ?? 0.05),
+      lines: lineCosts,
       missing,
+      unsized,
     };
     out.set(id, result);
     return result;
@@ -164,12 +285,40 @@ export function costAll(data: CostData): Map<string, RecipeCost> {
   return out;
 }
 
+/** Cost of one use of a supply: qty in the use's unit against the pack (pieces with pieces, weights with weights,
+ * 1 ml = 1 g); null when the units don't fit. */
+export function supplyUseCost(s: Supply, u: Pick<SupplyUse, 'qty' | 'unit'>): number | null {
+  if (!(s.pack_qty > 0)) return null;
+  if (s.unit === 'piece' || u.unit === 'piece') return s.unit === u.unit ? (s.price / s.pack_qty) * u.qty : null;
+  const pack = toGrams(s.pack_qty, s.unit);
+  const used = toGrams(u.qty, u.unit);
+  return pack && used !== null ? (s.price / pack) * used : null;
+}
+
+/** Supplies on one menu item or option: their total cost per unit sold, and whether one could not be priced. */
+export function supplyCostFor(target: { itemId?: string | null; optionId?: string | null }, supplies: readonly Supply[] = [], uses: readonly SupplyUse[] = []): { cost: number; count: number; missing: boolean } {
+  const byId = new Map(supplies.map((s) => [s.id, s]));
+  let cost = 0;
+  let count = 0;
+  let missing = false;
+  for (const u of uses) {
+    const hit = (target.itemId && u.menu_item_id === target.itemId) || (target.optionId && u.menu_option_id === target.optionId);
+    if (!hit) continue;
+    const s = byId.get(u.supply_id);
+    const c = s ? supplyUseCost(s, u) : null;
+    count++;
+    if (c === null) missing = true;
+    else cost += c;
+  }
+  return { cost, count, missing };
+}
+
 /**
  * Cost history (Yazeed, 2026-11-22): past days keep the costs they had. `cost_history` (backend 20261122180000) has one
  * version of every ingredient, recipe and recipe line per business day of a change (no names; data null = deleted).
  */
 export interface CostVersion {
-  tbl: 'ingredients' | 'recipes' | 'recipe_lines';
+  tbl: 'ingredients' | 'recipes' | 'recipe_lines' | 'supplies' | 'supply_uses';
   row_id: string;
   /** Business day of the change; 2000-01-01 is the baseline. */
   day: string;
@@ -185,17 +334,21 @@ export function costDataOn(versions: readonly CostVersion[], day: string): CostD
     const have = last.get(key);
     if (!have || have.day < v.day) last.set(key, v);
   }
-  const out: CostData = { ingredients: [], recipes: [], lines: [] };
+  const out: CostData = { ingredients: [], recipes: [], lines: [], supplies: [], supplyUses: [] };
   const num = (x: unknown) => (x == null ? null : Number(x));
   for (const v of last.values()) {
     const d = v.data;
     if (!d) continue;
     if (v.tbl === 'ingredients') {
-      out.ingredients.push({ ...(d as unknown as Ingredient), name: '', price: Number(d.price), pack_qty: num(d.pack_qty), weekly_units_estimate: num(d.weekly_units_estimate) });
+      out.ingredients.push({ ...(d as unknown as Ingredient), name: '', price: Number(d.price), pack_qty: num(d.pack_qty), weekly_units_estimate: num(d.weekly_units_estimate), piece_size: num(d.piece_size) });
     } else if (v.tbl === 'recipes') {
-      out.recipes.push({ ...(d as unknown as Recipe), name: '', yield: Number(d.yield), waste_pct: Number(d.waste_pct), multiplier: Number(d.multiplier) });
-    } else {
+      out.recipes.push({ ...(d as unknown as Recipe), name: '', yield: Number(d.yield), waste_pct: Number(d.waste_pct), multiplier: Number(d.multiplier), portion_size: num(d.portion_size) });
+    } else if (v.tbl === 'recipe_lines') {
       out.lines.push({ ...(d as unknown as RecipeLine), amount: Number(d.amount) });
+    } else if (v.tbl === 'supplies') {
+      out.supplies!.push({ ...(d as unknown as Supply), name: '', price: Number(d.price), pack_qty: Number(d.pack_qty) });
+    } else {
+      out.supplyUses!.push({ ...(d as unknown as SupplyUse), qty: Number(d.qty) });
     }
   }
   return out;
@@ -208,25 +361,26 @@ export function costDataOn(versions: readonly CostVersion[], day: string): CostD
  */
 export function costHistory(versions: readonly CostVersion[], weekly: WeeklyUnits = {}) {
   const days = [...new Set(versions.map((v) => v.day))].sort();
-  const cache = new Map<string, { recipes: Recipe[]; costs: Map<string, RecipeCost> }>();
+  const cache = new Map<string, { recipes: Recipe[]; costs: Map<string, RecipeCost>; data: CostData }>();
   const at = (day: string) => {
     let c = cache.get(day);
     if (!c) {
       const data = costDataOn(versions, day);
       const withLines = new Set(data.lines.map((l) => l.recipe_id));
       // A recipe without lines has no cost yet (not a cost of 0).
-      c = { recipes: data.recipes.filter((r) => withLines.has(r.id)), costs: costAll({ ...data, weekly }) };
+      c = { recipes: data.recipes.filter((r) => withLines.has(r.id)), costs: costAll({ ...data, weekly }), data };
       cache.set(day, c);
     }
     return c;
   };
   return {
-    costOn(day: string, pick: (recipes: Recipe[], costs: Map<string, RecipeCost>) => number | null): number | null {
+    /** `data` has that day's supplies and uses too (supplyCostFor). */
+    costOn(day: string, pick: (recipes: Recipe[], costs: Map<string, RecipeCost>, data: CostData) => number | null): number | null {
       let from = -1;
       for (let i = 0; i < days.length && days[i] <= day; i++) from = i;
       for (let i = Math.max(from, 0); i < days.length; i++) {
         const c = at(days[i]);
-        const v = pick(c.recipes, c.costs);
+        const v = pick(c.recipes, c.costs, c.data);
         if (v !== null) return v;
       }
       return null;
