@@ -3,9 +3,9 @@
 //
 // Item cost:  batch cost = sum of recipe lines; cost per portion = batch / portions;
 //             with waste = per portion x (1 + waste%); recommended price = with waste x multiplier, rounded up.
-// Sizes (2026-11-23): 1 ml counts as 1 g. A recipe's size is the sum of its lines in grams. The user sets how many
-//             portions it makes (yield); one portion's size = size / portions is shown live. (portion_size, if ever
-//             set, makes portions = size / portion size instead; the Admin app does not set it.) A sub-recipe used by weight or volume costs
+// Sizes (2026-11-23): 1 ml counts as 1 g. A recipe's size is the sum of its lines in grams. The user types either the
+//             portions (yield) or one portion's size (portion_size, portion_unit) and the other follows; the one typed
+//             last is stored and stays fixed: with a portion size stored, portions = size / portion size, else yield. A sub-recipe used by weight or volume costs
 //             that share of its size (with its waste); used in portions, portions x its cost with waste.
 // Supplies (2026-11-23): cones, boxes, cups, oil, gas: not part of any recipe; their cost goes straight onto menu items
 //             and options (supplyCostFor), with no waste added.
@@ -163,7 +163,7 @@ export interface RecipeCost {
   batch: number;
   /** The batch size in grams (1 ml = 1 g); null when a line's size is unknown or there are no lines. */
   totalGrams: number | null;
-  /** Portions: yield (what the user sets); size / portion_size only where a portion size is stored. */
+  /** Portions: size / portion_size when a portion size is stored (and the size is known), else yield. */
   portions: number;
   /** One portion in grams (size / portions), shown live next to the portions; null without a size. */
   portionGrams: number | null;
