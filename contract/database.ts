@@ -617,6 +617,7 @@ export type Database = {
           slug: string
           sort: number
           stock_key: string
+          tags: string[]
           translations: Json
         }
         Insert: {
@@ -636,6 +637,7 @@ export type Database = {
           slug: string
           sort?: number
           stock_key: string
+          tags?: string[]
           translations?: Json
         }
         Update: {
@@ -655,6 +657,7 @@ export type Database = {
           slug?: string
           sort?: number
           stock_key?: string
+          tags?: string[]
           translations?: Json
         }
         Relationships: [
