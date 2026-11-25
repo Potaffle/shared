@@ -1663,6 +1663,10 @@ export type Database = {
       cash_tracking_from: { Args: { p_branch?: string }; Returns: string }
       check_admin_pin: { Args: { p_pin: string }; Returns: Json }
       check_points: { Args: { p_phone: string }; Returns: Json }
+      close_cash_no_sales: {
+        Args: { p_branch?: string; p_day?: string }
+        Returns: Json
+      }
       close_day: {
         Args: {
           p_branch?: string
