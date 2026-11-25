@@ -1678,6 +1678,12 @@ export type Database = {
         Args: { p_kind: string; p_menu_item_id: string }
         Returns: Json
       }
+      menu_in_use: {
+        Args: { p_item?: string; p_option?: string }
+        Returns: boolean
+      }
+      menu_item_in_use: { Args: { p_item: string }; Returns: boolean }
+      menu_option_in_use: { Args: { p_option: string }; Returns: boolean }
       next_order_num: { Args: never; Returns: number }
       open_day: { Args: { p_branch?: string; p_start: number }; Returns: Json }
       order_counts: { Args: { p_day?: string }; Returns: Json }
