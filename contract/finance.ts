@@ -54,6 +54,9 @@ export interface Supply {
   unit: Unit;
   price: number;
   active?: boolean;
+  /** static (default): priced per use from the pack. dynamic: `price` paid every `period`, spread over what sold. */
+  kind?: 'static' | 'dynamic';
+  period?: CostPeriod | null;
 }
 
 /** How much of a supply one unit of a menu item or option takes. */
@@ -127,6 +130,35 @@ export const costPerMonth = (amount: number, period: CostPeriod) => (amount * PE
  */
 export function dailyGrossProfitTarget(costs: readonly Pick<MonthlyCost, 'amount' | 'active' | 'period'>[], daysOpenWeek: number): number {
   return costs.filter((c) => c.active).reduce((t, c) => t + costPerOpenDay(Number(c.amount), c.period ?? 'month', daysOpenWeek), 0);
+}
+
+/** Key of a menu item or option for the sold-units map of dynamicSupplyCosts. */
+export const soldKey = (t: { itemId?: string | null; optionId?: string | null }) => (t.optionId ? `o:${t.optionId}` : `i:${t.itemId}`);
+
+/**
+ * Dynamic supplies over a period (Yazeed, 2026-11-26): each active dynamic supply's pool = costPerOpenDay x the
+ * period's open days (days with sales in it); the pool is shared over the linked items and options sold in the
+ * period, weighted by supply_uses.qty (Small 1, Medium 2; free ones count too). Returns the cost per unit sold of each
+ * item or option (soldKey), the total pool, and the part of the pool nothing linked sold to carry.
+ * Today = 1 open day; a week = its days with sales; for an item page, use the last 30 days to get a typical cost.
+ */
+export function dynamicSupplyCosts(supplies: readonly Supply[], uses: readonly SupplyUse[], sold: ReadonlyMap<string, number>, openDays: number, daysOpenWeek: number): { perUnit: Map<string, number>; pool: number; unallocated: number } {
+  const perUnit = new Map<string, number>();
+  let pool = 0;
+  let unallocated = 0;
+  for (const s of supplies) {
+    if (s.kind !== 'dynamic' || s.active === false || !s.period) continue;
+    const p = costPerOpenDay(Number(s.price), s.period, daysOpenWeek) * openDays;
+    pool += p;
+    const mine = uses.filter((u) => u.supply_id === s.id);
+    const weight = mine.reduce((t, u) => t + Number(u.qty) * (sold.get(soldKey({ itemId: u.menu_item_id, optionId: u.menu_option_id })) ?? 0), 0);
+    if (!(weight > 0)) { unallocated += p; continue; }
+    for (const u of mine) {
+      const k = soldKey({ itemId: u.menu_item_id, optionId: u.menu_option_id });
+      perUnit.set(k, (perUnit.get(k) ?? 0) + (p * Number(u.qty)) / weight);
+    }
+  }
+  return { perUnit, pool, unallocated };
 }
 
 /** expense_months rows: total per month (YYYY-MM-01) and category. */
@@ -357,6 +389,7 @@ export function supplyCostFor(target: { itemId?: string | null; optionId?: strin
     const hit = (target.itemId && u.menu_item_id === target.itemId) || (target.optionId && u.menu_option_id === target.optionId);
     if (!hit) continue;
     const s = byId.get(u.supply_id);
+    if (s?.kind === 'dynamic') continue; // spread over sales instead: dynamicSupplyCosts
     const c = s ? supplyUseCost(s, u) : null;
     count++;
     if (c === null) missing = true;

@@ -1,7 +1,7 @@
 // Worked examples for finance.ts (2026-11-22/23, checked by hand). Run after any change to the cost rules:
 //   node --experimental-strip-types --no-warnings shared/contract/finance.check.ts
 // Not imported by the apps; no build, no dependencies.
-import { costPerOpenDay, costPerMonth, dailyGrossProfitTarget, openDaysPerYear, costAll, costDataOn, menuRecipeCost, menuRecipesOf, unknownSauceCost, type MenuRecipe, costHistory, supplyCostFor, supplyUseCost, ingredientLine, lineUnitsFor, fromGrams, type Ingredient, type Recipe, type RecipeLine, type Supply, type SupplyUse, type CostVersion } from './finance.ts';
+import { dynamicSupplyCosts, soldKey, costPerOpenDay, costPerMonth, dailyGrossProfitTarget, openDaysPerYear, costAll, costDataOn, menuRecipeCost, menuRecipesOf, unknownSauceCost, type MenuRecipe, costHistory, supplyCostFor, supplyUseCost, ingredientLine, lineUnitsFor, fromGrams, type Ingredient, type Recipe, type RecipeLine, type Supply, type SupplyUse, type CostVersion } from './finance.ts';
 let fails = 0;
 const eq = (n: string, a: any, b: any) => { const ok = a === b || (typeof a === 'number' && typeof b === 'number' && Math.abs(a - b) < 1e-9); if (!ok) fails++; console.log(ok ? 'ok  ' : 'FAIL', n, a, ok ? '' : `(want ${b})`); };
 const ing = (id: string, pack_qty: number, unit: any, price: number, extra: Partial<Ingredient> = {}): Ingredient => ({ id, name: id, mode: 'pack', pack_qty, unit, price, weekly_item_id: null, weekly_units_estimate: null, ...extra });
@@ -177,6 +177,27 @@ let n = 0; const line = (recipe_id: string, x: Partial<RecipeLine>): RecipeLine 
   const C = [{ amount: 700, active: true, period: 'month' as const }, { amount: 900, active: true }, { amount: 8, active: true, period: 'week' as const }, { amount: 999, active: false }];
   eq('daily target', dailyGrossProfitTarget(C, 6), 19616 / 312);
   eq('7 days open', dailyGrossProfitTarget([{ amount: 364, active: true, period: 'week' }], 7), 364 / 7);
+}
+
+// Dynamic supplies (2026-11-26): oil 300 a month on fries (Small 1, Medium 2), gas 8 a week on fries and waffle.
+{
+  const S: Supply[] = [{ id: 'oil', name: 'oil', pack_qty: 1, unit: 'piece', price: 300, kind: 'dynamic', period: 'month' },
+                       { id: 'gas', name: 'gas', pack_qty: 1, unit: 'piece', price: 8, kind: 'dynamic', period: 'week' },
+                       { id: 'cone', name: 'cone', pack_qty: 100, unit: 'piece', price: 5 }];
+  const U: SupplyUse[] = [{ id: 'a', supply_id: 'oil', menu_item_id: null, menu_option_id: 'small', qty: 1, unit: 'piece' },
+                          { id: 'b', supply_id: 'oil', menu_item_id: null, menu_option_id: 'medium', qty: 2, unit: 'piece' },
+                          { id: 'c', supply_id: 'gas', menu_item_id: null, menu_option_id: 'small', qty: 1, unit: 'piece' },
+                          { id: 'd', supply_id: 'gas', menu_item_id: 'waffle', menu_option_id: null, qty: 1, unit: 'piece' },
+                          { id: 'e', supply_id: 'cone', menu_item_id: null, menu_option_id: 'small', qty: 1, unit: 'piece' }];
+  const sold = new Map([[soldKey({ optionId: 'small' }), 100], [soldKey({ optionId: 'medium' }), 50], [soldKey({ itemId: 'waffle' }), 20]]);
+  const w = dynamicSupplyCosts(S, U, sold, 6, 6);  // a week of 6 open days
+  eq('week pool', w.pool, (3600 / 312 + 416 / 312) * 6);
+  eq('oil per small (weight 200)', w.perUnit.get('o:small')! - (416 / 312 * 6) / 120, (3600 / 312 * 6) / 200);
+  eq('oil per medium = 2 x small', w.perUnit.get('o:medium')!, (3600 / 312 * 6) * 2 / 200);
+  eq('gas per waffle', w.perUnit.get('i:waffle')!, (416 / 312 * 6) / 120);
+  eq('static cone not in pool', supplyCostFor({ optionId: 'small' }, S, U).cost, 0.05);
+  const none = dynamicSupplyCosts(S, U, new Map(), 1, 6);
+  eq('nothing sold: all unallocated', none.unallocated, none.pool);
 }
 console.log(fails ? `${fails} FAILED` : 'all passed');
 if (fails) process.exit(1);

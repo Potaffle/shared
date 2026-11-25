@@ -1303,9 +1303,11 @@ export type Database = {
         Row: {
           active: boolean
           id: string
+          kind: string
           name: string
           note: string | null
           pack_qty: number
+          period: string | null
           price: number
           unit: string
           updated_at: string
@@ -1313,9 +1315,11 @@ export type Database = {
         Insert: {
           active?: boolean
           id?: string
+          kind?: string
           name: string
           note?: string | null
           pack_qty: number
+          period?: string | null
           price: number
           unit: string
           updated_at?: string
@@ -1323,9 +1327,11 @@ export type Database = {
         Update: {
           active?: boolean
           id?: string
+          kind?: string
           name?: string
           note?: string | null
           pack_qty?: number
+          period?: string | null
           price?: number
           unit?: string
           updated_at?: string
