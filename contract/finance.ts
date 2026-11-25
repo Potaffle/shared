@@ -32,7 +32,9 @@ export interface Ingredient {
 export interface Recipe {
   id: string;
   name: string;
+  /** @deprecated 2026-11-26: use MenuRecipe (menu_recipes). */
   menu_item_id: string | null;
+  /** @deprecated 2026-11-26: use MenuRecipe (menu_recipes). */
   menu_option_id: string | null;
   yield: number;
   waste_pct: number;
@@ -62,6 +64,20 @@ export interface SupplyUse {
   menu_option_id: string | null;
   qty: number;
   unit: Unit;
+}
+
+/**
+ * Which recipe a menu item or option uses (backend 20261126100000, Yazeed 2026-11-26): one recipe per item or option,
+ * a recipe may serve several (Small = 1 portion, Medium = 2 portions of the same fries recipe). Replaces the deprecated
+ * Recipe.menu_item_id / menu_option_id.
+ */
+export interface MenuRecipe {
+  id: string;
+  recipe_id: string;
+  menu_item_id: string | null;
+  menu_option_id: string | null;
+  /** How many of the recipe's portions one unit sold takes. */
+  portions: number;
 }
 
 export interface RecipeLine {
@@ -189,6 +205,8 @@ export interface CostData {
   lines: RecipeLine[];
   supplies?: Supply[];
   supplyUses?: SupplyUse[];
+  /** Recipe links of menu items and options; without them, the deprecated Recipe.menu_item_id / menu_option_id count as 1 portion. */
+  menuRecipes?: MenuRecipe[];
   weekly?: WeeklyUnits;
   roundTo?: number;
 }
@@ -317,12 +335,37 @@ export function supplyCostFor(target: { itemId?: string | null; optionId?: strin
   return { cost, count, missing };
 }
 
+/** The recipe links to use: `menuRecipes` when given, else the deprecated recipe columns as 1 portion each. */
+export function menuRecipesOf(data: Pick<CostData, 'recipes' | 'menuRecipes'>): MenuRecipe[] {
+  if (data.menuRecipes) return data.menuRecipes;
+  return data.recipes
+    .filter((r) => r.menu_item_id || r.menu_option_id)
+    .map((r) => ({ id: `legacy:${r.id}`, recipe_id: r.id, menu_item_id: r.menu_item_id, menu_option_id: r.menu_option_id, portions: 1 }));
+}
+
+/** The recipe link of one menu item or option, or null. */
+export function menuRecipeFor(target: { itemId?: string | null; optionId?: string | null }, links: readonly MenuRecipe[]): MenuRecipe | null {
+  return links.find((m) => (target.itemId && m.menu_item_id === target.itemId) || (target.optionId && m.menu_option_id === target.optionId)) ?? null;
+}
+
+/**
+ * Recipe cost of one unit sold of a menu item or option: the recipe's cost per portion with waste x the link's portions.
+ * null without a link or without a complete recipe cost.
+ */
+export function menuRecipeCost(target: { itemId?: string | null; optionId?: string | null }, links: readonly MenuRecipe[], costs: Map<string, RecipeCost>): { cost: number; recipeId: string; portions: number } | null {
+  const link = menuRecipeFor(target, links);
+  if (!link) return null;
+  const c = costs.get(link.recipe_id);
+  if (!c || c.missing.length) return null;
+  return { cost: c.withWaste * link.portions, recipeId: link.recipe_id, portions: link.portions };
+}
+
 /**
  * Cost history (Yazeed, 2026-11-22): past days keep the costs they had. `cost_history` (backend 20261122180000) has one
  * version of every ingredient, recipe and recipe line per business day of a change (no names; data null = deleted).
  */
 export interface CostVersion {
-  tbl: 'ingredients' | 'recipes' | 'recipe_lines' | 'supplies' | 'supply_uses';
+  tbl: 'ingredients' | 'recipes' | 'recipe_lines' | 'supplies' | 'supply_uses' | 'menu_recipes';
   row_id: string;
   /** Business day of the change; 2000-01-01 is the baseline. */
   day: string;
@@ -339,6 +382,8 @@ export function costDataOn(versions: readonly CostVersion[], day: string): CostD
     if (!have || have.day < v.day) last.set(key, v);
   }
   const out: CostData = { ingredients: [], recipes: [], lines: [], supplies: [], supplyUses: [] };
+  const links: MenuRecipe[] = [];
+  let sawLinks = false;
   const num = (x: unknown) => (x == null ? null : Number(x));
   for (const v of last.values()) {
     const d = v.data;
@@ -351,10 +396,15 @@ export function costDataOn(versions: readonly CostVersion[], day: string): CostD
       out.lines.push({ ...(d as unknown as RecipeLine), amount: Number(d.amount) });
     } else if (v.tbl === 'supplies') {
       out.supplies!.push({ ...(d as unknown as Supply), name: '', price: Number(d.price), pack_qty: Number(d.pack_qty) });
-    } else {
+    } else if (v.tbl === 'supply_uses') {
       out.supplyUses!.push({ ...(d as unknown as SupplyUse), qty: Number(d.qty) });
+    } else if (v.tbl === 'menu_recipes') {
+      links.push({ ...(d as unknown as MenuRecipe), portions: Number(d.portions) });
     }
   }
+  // Days before menu_recipes existed have no link versions: the deprecated recipe columns stand in (menuRecipesOf).
+  for (const v of versions) if (v.tbl === 'menu_recipes') { sawLinks = true; break; }
+  if (sawLinks) out.menuRecipes = links;
   return out;
 }
 
@@ -396,12 +446,11 @@ export function costHistory(versions: readonly CostVersion[], weekly: WeeklyUnit
  * Cost of the Unknown sauce (Yazeed, 2026-11-20): it is not a recipe of its own but the plain average of the named
  * sauces' cost with waste, over the sauces that have a complete recipe. null while no sauce has one.
  */
-export function unknownSauceCost(sauceItemIds: string[], recipes: Recipe[], costs: Map<string, RecipeCost>): { cost: number; sauces: number } | null {
-  const vals = recipes
-    .filter((r) => r.menu_item_id && sauceItemIds.includes(r.menu_item_id))
-    .map((r) => costs.get(r.id))
-    .filter((c): c is RecipeCost => !!c && c.missing.length === 0)
-    .map((c) => c.withWaste);
+export function unknownSauceCost(sauceItemIds: string[], links: readonly MenuRecipe[], costs: Map<string, RecipeCost>): { cost: number; sauces: number } | null {
+  const vals = sauceItemIds
+    .map((id) => menuRecipeCost({ itemId: id }, links, costs))
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+    .map((c) => c.cost);
   return vals.length ? { cost: vals.reduce((a, b) => a + b, 0) / vals.length, sauces: vals.length } : null;
 }
 

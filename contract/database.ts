@@ -836,6 +836,62 @@ export type Database = {
           },
         ]
       }
+      menu_recipes: {
+        Row: {
+          created_at: string
+          id: string
+          menu_item_id: string | null
+          menu_option_id: string | null
+          portions: number
+          recipe_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          menu_option_id?: string | null
+          portions?: number
+          recipe_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          menu_option_id?: string | null
+          portions?: number
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_recipes_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: true
+            referencedRelation: "menu_availability"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "menu_recipes_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: true
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_recipes_menu_option_id_fkey"
+            columns: ["menu_option_id"]
+            isOneToOne: true
+            referencedRelation: "menu_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_recipes_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_costs: {
         Row: {
           active: boolean

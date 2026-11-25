@@ -1,7 +1,7 @@
 // Worked examples for finance.ts (2026-11-22/23, checked by hand). Run after any change to the cost rules:
 //   node --experimental-strip-types --no-warnings shared/contract/finance.check.ts
 // Not imported by the apps; no build, no dependencies.
-import { costAll, costDataOn, costHistory, supplyCostFor, supplyUseCost, ingredientLine, lineUnitsFor, fromGrams, type Ingredient, type Recipe, type RecipeLine, type Supply, type SupplyUse, type CostVersion } from './finance.ts';
+import { costAll, costDataOn, menuRecipeCost, menuRecipesOf, unknownSauceCost, type MenuRecipe, costHistory, supplyCostFor, supplyUseCost, ingredientLine, lineUnitsFor, fromGrams, type Ingredient, type Recipe, type RecipeLine, type Supply, type SupplyUse, type CostVersion } from './finance.ts';
 let fails = 0;
 const eq = (n: string, a: any, b: any) => { const ok = a === b || (typeof a === 'number' && typeof b === 'number' && Math.abs(a - b) < 1e-9); if (!ok) fails++; console.log(ok ? 'ok  ' : 'FAIL', n, a, ok ? '' : `(want ${b})`); };
 const ing = (id: string, pack_qty: number, unit: any, price: number, extra: Partial<Ingredient> = {}): Ingredient => ({ id, name: id, mode: 'pack', pack_qty, unit, price, weekly_item_id: null, weekly_units_estimate: null, ...extra });
@@ -144,6 +144,27 @@ let n = 0; const line = (recipe_id: string, x: Partial<RecipeLine>): RecipeLine 
   eq('typed 10 portions → 70 ml',c(rec('p',{yield:10}),false).portionGrams,70);
   eq('40 ml kept after +100 ml → 20 portions',c(rec('p',{portion_size:40,portion_unit:'ml',yield:17.5}),true).portions,20);
   eq('10 portions kept after +100 ml → 80 ml',c(rec('p',{yield:10}),true).portionGrams,80);
+}
+
+// Shared recipes with portions (2026-11-26): one fries recipe, Small = 1 portion, Medium = 2 portions.
+{
+  const I = [ing('potato', 1, 'kg', 0.8)];
+  const R = [rec('fries', { waste_pct: 20 })];
+  const L = [line('fries', { ingredient_id: 'potato', amount: 180, unit: 'g' })]; // 0.144, with 20 % waste 0.1728
+  const M: MenuRecipe[] = [{ id: 'm1', recipe_id: 'fries', menu_item_id: null, menu_option_id: 'small', portions: 1 },
+                           { id: 'm2', recipe_id: 'fries', menu_item_id: null, menu_option_id: 'medium', portions: 2 }];
+  const c = costAll({ ingredients: I, recipes: R, lines: L });
+  eq('small = 1 portion', menuRecipeCost({ optionId: 'small' }, M, c)!.cost, 0.1728);
+  eq('medium = 2 portions', menuRecipeCost({ optionId: 'medium' }, M, c)!.cost, 0.3456);
+  eq('no link → null', menuRecipeCost({ optionId: 'large' }, M, c), null);
+  eq('legacy column as 1 portion', menuRecipesOf({ recipes: [rec('x', { menu_item_id: 'cola' })] })[0].portions, 1);
+  eq('unknown sauce = average', unknownSauceCost(['a', 'b'], [{ id: 'm', recipe_id: 'fries', menu_item_id: 'a', menu_option_id: null, portions: 1 }, { id: 'n', recipe_id: 'fries', menu_item_id: 'b', menu_option_id: null, portions: 2 }], c)!.cost, 0.2592);
+  const v = (tbl: any, row_id: string, day: string, data: any): CostVersion => ({ tbl, row_id, day, data });
+  const H = [v('menu_recipes', 'm2', '2000-01-01', { id: 'm2', recipe_id: 'fries', menu_item_id: null, menu_option_id: 'medium', portions: '1.000' }),
+             v('menu_recipes', 'm2', '2026-11-26', { id: 'm2', recipe_id: 'fries', menu_item_id: null, menu_option_id: 'medium', portions: '2.000' })];
+  eq('history: 1 portion before', costDataOn(H, '2026-11-25').menuRecipes![0].portions, 1);
+  eq('history: 2 portions after', costDataOn(H, '2026-11-26').menuRecipes![0].portions, 2);
+  eq('no link versions → legacy', costDataOn([], '2026-11-26').menuRecipes, undefined);
 }
 console.log(fails ? `${fails} FAILED` : 'all passed');
 if (fails) process.exit(1);
