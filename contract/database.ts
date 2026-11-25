@@ -99,7 +99,6 @@ export type Database = {
           orders: number
           reopened_at: string | null
           status: string
-          total_only: boolean
         }
         Insert: {
           branch?: string
@@ -124,7 +123,6 @@ export type Database = {
           orders?: number
           reopened_at?: string | null
           status?: string
-          total_only?: boolean
         }
         Update: {
           branch?: string
@@ -149,7 +147,6 @@ export type Database = {
           orders?: number
           reopened_at?: string | null
           status?: string
-          total_only?: boolean
         }
         Relationships: []
       }
@@ -1399,7 +1396,6 @@ export type Database = {
           reopened_at: string | null
           status: string | null
           taken_home: number | null
-          total_only: boolean | null
         }
         Relationships: []
       }
@@ -1429,7 +1425,6 @@ export type Database = {
           sales: number | null
           status: string | null
           taken_home: number | null
-          total_only: boolean | null
         }
         Relationships: []
       }
