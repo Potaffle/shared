@@ -369,18 +369,21 @@ export type Database = {
       finance_settings: {
         Row: {
           days_open_month: number
+          days_open_week: number
           id: string
           round_to: number
           updated_at: string
         }
         Insert: {
           days_open_month?: number
+          days_open_week?: number
           id?: string
           round_to?: number
           updated_at?: string
         }
         Update: {
           days_open_month?: number
+          days_open_week?: number
           id?: string
           round_to?: number
           updated_at?: string
@@ -902,6 +905,7 @@ export type Database = {
           id: string
           kind: string
           name: string
+          period: string
           sort: number
         }
         Insert: {
@@ -913,6 +917,7 @@ export type Database = {
           id?: string
           kind?: string
           name: string
+          period?: string
           sort?: number
         }
         Update: {
@@ -924,6 +929,7 @@ export type Database = {
           id?: string
           kind?: string
           name?: string
+          period?: string
           sort?: number
         }
         Relationships: []

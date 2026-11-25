@@ -1,7 +1,7 @@
 // Worked examples for finance.ts (2026-11-22/23, checked by hand). Run after any change to the cost rules:
 //   node --experimental-strip-types --no-warnings shared/contract/finance.check.ts
 // Not imported by the apps; no build, no dependencies.
-import { costAll, costDataOn, menuRecipeCost, menuRecipesOf, unknownSauceCost, type MenuRecipe, costHistory, supplyCostFor, supplyUseCost, ingredientLine, lineUnitsFor, fromGrams, type Ingredient, type Recipe, type RecipeLine, type Supply, type SupplyUse, type CostVersion } from './finance.ts';
+import { costPerOpenDay, costPerMonth, dailyGrossProfitTarget, openDaysPerYear, costAll, costDataOn, menuRecipeCost, menuRecipesOf, unknownSauceCost, type MenuRecipe, costHistory, supplyCostFor, supplyUseCost, ingredientLine, lineUnitsFor, fromGrams, type Ingredient, type Recipe, type RecipeLine, type Supply, type SupplyUse, type CostVersion } from './finance.ts';
 let fails = 0;
 const eq = (n: string, a: any, b: any) => { const ok = a === b || (typeof a === 'number' && typeof b === 'number' && Math.abs(a - b) < 1e-9); if (!ok) fails++; console.log(ok ? 'ok  ' : 'FAIL', n, a, ok ? '' : `(want ${b})`); };
 const ing = (id: string, pack_qty: number, unit: any, price: number, extra: Partial<Ingredient> = {}): Ingredient => ({ id, name: id, mode: 'pack', pack_qty, unit, price, weekly_item_id: null, weekly_units_estimate: null, ...extra });
@@ -165,6 +165,18 @@ let n = 0; const line = (recipe_id: string, x: Partial<RecipeLine>): RecipeLine 
   eq('history: 1 portion before', costDataOn(H, '2026-11-25').menuRecipes![0].portions, 1);
   eq('history: 2 portions after', costDataOn(H, '2026-11-26').menuRecipes![0].portions, 2);
   eq('no link versions → legacy', costDataOn([], '2026-11-26').menuRecipes, undefined);
+}
+
+// Fixed costs and the daily gross profit target (2026-11-26): 52 weeks x 6 days = 312 open days a year.
+{
+  eq('open days a year', openDaysPerYear(6), 312);
+  eq('oil 300 a month per open day', costPerOpenDay(300, 'month', 6), 3600 / 312);
+  eq('gas 8 a week per open day', costPerOpenDay(8, 'week', 6), 416 / 312);
+  eq('yearly licence 120', costPerOpenDay(120, 'year', 6), 120 / 312);
+  eq('weekly 8 as a month', costPerMonth(8, 'week'), 416 / 12);
+  const C = [{ amount: 700, active: true, period: 'month' as const }, { amount: 900, active: true }, { amount: 8, active: true, period: 'week' as const }, { amount: 999, active: false }];
+  eq('daily target', dailyGrossProfitTarget(C, 6), 19616 / 312);
+  eq('7 days open', dailyGrossProfitTarget([{ amount: 364, active: true, period: 'week' }], 7), 364 / 7);
 }
 console.log(fails ? `${fails} FAILED` : 'all passed');
 if (fails) process.exit(1);

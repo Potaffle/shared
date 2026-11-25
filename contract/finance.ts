@@ -97,6 +97,36 @@ export interface MonthlyCost {
   amount: number;
   category: string | null;
   active: boolean;
+  /** How often `amount` is paid (backend 20261126140000); missing = month. */
+  period?: CostPeriod;
+}
+
+/** How often a running or fixed cost is paid. */
+export type CostPeriod = 'week' | 'month' | 'year';
+const PER_YEAR: Record<CostPeriod, number> = { week: 52, month: 12, year: 1 };
+
+/**
+ * Days open a year (Yazeed, 2026-11-26): a year counts as 52 weeks of `daysOpenWeek` days (finance_settings.days_open_week,
+ * 6), not the cash days, which have too little data yet.
+ */
+export const openDaysPerYear = (daysOpenWeek: number) => daysOpenWeek * 52;
+
+/** A cost paid every `period`, spread over the open days of a year: amount x periods a year / open days a year. */
+export function costPerOpenDay(amount: number, period: CostPeriod, daysOpenWeek: number): number {
+  const days = openDaysPerYear(daysOpenWeek);
+  return days > 0 ? (amount * PER_YEAR[period]) / days : 0;
+}
+
+/** A cost as a monthly amount (for showing the list's total): amount x periods a year / 12. */
+export const costPerMonth = (amount: number, period: CostPeriod) => (amount * PER_YEAR[period]) / 12;
+
+/**
+ * Daily gross profit target (Yazeed, 2026-11-26): the gross profit an open day needs so the fixed costs are covered.
+ * Sum of every active fixed cost per open day. Example: rent 700 a month + salaries 900 a month + gas 8 a week
+ * = (700 x 12 + 900 x 12 + 8 x 52) / (6 x 52) = 19,616 / 312 = 62.872 a day.
+ */
+export function dailyGrossProfitTarget(costs: readonly Pick<MonthlyCost, 'amount' | 'active' | 'period'>[], daysOpenWeek: number): number {
+  return costs.filter((c) => c.active).reduce((t, c) => t + costPerOpenDay(Number(c.amount), c.period ?? 'month', daysOpenWeek), 0);
 }
 
 /** expense_months rows: total per month (YYYY-MM-01) and category. */
