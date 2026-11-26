@@ -82,6 +82,8 @@ export interface Order {
    * offers Send again: notify-ready with kind 'received'). Set by the server only.
    */
   receivedMsg?: 'sent' | 'failed' | null;
+  /** The delivery company that brought it (orders.delivery, 2026-11-26); null or absent = our own. See DELIVERY_COMPANIES. */
+  delivery?: DeliveryCompany | null;
 }
 
 export const lineTotal = (l: OrderLine) => l.qty * l.unit;
