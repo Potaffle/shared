@@ -1098,6 +1098,7 @@ export type Database = {
           created_at: string
           customer_id: string | null
           day_key: string
+          delivery: string | null
           id: string
           num: number
           paid: boolean
@@ -1119,6 +1120,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           day_key: string
+          delivery?: string | null
           id?: string
           num: number
           paid?: boolean
@@ -1140,6 +1142,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           day_key?: string
+          delivery?: string | null
           id?: string
           num?: number
           paid?: boolean
@@ -1760,6 +1763,7 @@ export type Database = {
           created_at: string
           customer_id: string | null
           day_key: string
+          delivery: string | null
           id: string
           num: number
           paid: boolean
@@ -1844,6 +1848,7 @@ export type Database = {
         Args: { p_branch: string; p_day: string }
         Returns: undefined
       }
+      takes_orders: { Args: never; Returns: boolean }
     }
     Enums: {
       menu_config: "none" | "sauces" | "tops"

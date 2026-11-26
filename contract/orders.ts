@@ -225,3 +225,20 @@ export const fmtPhone = (phone: string) => {
   const d = normaliseLocalPhone(phone);
   return d.length === 9 ? `${PHONE_PREFIX} ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}` : phone;
 };
+
+/**
+ * Delivery company that brought an order (orders.delivery, 2026-11-26). Only a mark for now; fees come later.
+ * Colours from each company's logo, for the tag and the order card's outline.
+ */
+export type DeliveryCompany = 'talabat' | 'mythings';
+export const DELIVERY_COMPANIES: readonly { id: DeliveryCompany; name: string; color: string; text: string }[] = [
+  { id: 'talabat', name: 'Talabat', color: '#FF5A00', text: '#FFFFFF' },
+  { id: 'mythings', name: 'MyThings', color: '#FFC700', text: '#111111' },
+];
+
+/**
+ * An admin who only watches (app_metadata.orders = 'none', 2026-11-26): sees everything, takes and changes no
+ * orders. The database refuses their writes (public.takes_orders()); the apps hide the buttons.
+ */
+export const takesOrders = (appMetadata: { role?: string; orders?: string } | null | undefined): boolean =>
+  (appMetadata?.role === 'staff' || appMetadata?.role === 'owner') && appMetadata?.orders !== 'none';
