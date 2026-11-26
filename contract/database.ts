@@ -1105,6 +1105,7 @@ export type Database = {
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
           ready_sent_at: string | null
+          received_msg: string | null
           seq: number
           source: Database["public"]["Enums"]["order_source"]
           status: Database["public"]["Enums"]["order_status"]
@@ -1125,6 +1126,7 @@ export type Database = {
           pay: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
           ready_sent_at?: string | null
+          received_msg?: string | null
           seq: number
           source: Database["public"]["Enums"]["order_source"]
           status?: Database["public"]["Enums"]["order_status"]
@@ -1145,6 +1147,7 @@ export type Database = {
           pay?: Database["public"]["Enums"]["payment_method"]
           phone?: string | null
           ready_sent_at?: string | null
+          received_msg?: string | null
           seq?: number
           source?: Database["public"]["Enums"]["order_source"]
           status?: Database["public"]["Enums"]["order_status"]
@@ -1417,6 +1420,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_auto_replies: {
+        Row: {
+          phone: string
+          replied_at: string
+        }
+        Insert: {
+          phone: string
+          replied_at?: string
+        }
+        Update: {
+          phone?: string
+          replied_at?: string
+        }
+        Relationships: []
       }
       whatsapp_messages: {
         Row: {
@@ -1703,6 +1721,7 @@ export type Database = {
         Args: { p_app: string; p_device: string; p_screen?: string }
         Returns: Json
       }
+      claim_whatsapp_auto_reply: { Args: { p_phone: string }; Returns: boolean }
       close_cash_no_sales: {
         Args: { p_branch?: string; p_day?: string }
         Returns: Json
@@ -1748,6 +1767,7 @@ export type Database = {
           pay: Database["public"]["Enums"]["payment_method"]
           phone: string | null
           ready_sent_at: string | null
+          received_msg: string | null
           seq: number
           source: Database["public"]["Enums"]["order_source"]
           status: Database["public"]["Enums"]["order_status"]
