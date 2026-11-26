@@ -78,3 +78,27 @@ export interface CounterScreenCart {
   /** Points the order's free-for-points lines will use (sum of their reward costs); the keypad shows them leaving the bar. */
   spend?: number;
 }
+
+/**
+ * One order at a time (order_entry_lock, 2026-11-26): the Counter and the Admin app both have Add order and both drive
+ * the keypad, so only one device may have that screen open. On opening Add order call
+ * `claim_order_entry(p_app, p_device)`; while it stays open call it again every ORDER_ENTRY_HEARTBEAT_MS; on close,
+ * save or cancel call `release_order_entry(p_device)`. `p_device` is a random id the device keeps in localStorage.
+ * A holder not seen for ORDER_ENTRY_STALE_MS is stale and may be taken over (an iPad that died with the screen open).
+ */
+export type OrderEntryApp = 'counter' | 'admin';
+export type OrderEntryClaim =
+  | { ok: true }
+  | { ok: false; app: OrderEntryApp; seen_at: string };
+export const ORDER_ENTRY_HEARTBEAT_MS = 10_000;
+export const ORDER_ENTRY_STALE_MS = 30_000;
+
+/** True when another device holds Add order right now (for disabling the button from the Realtime row). */
+export function orderEntryHeldByOther(
+  row: { device: string | null; seen_at: string | null },
+  myDevice: string,
+  now: number = Date.now(),
+): boolean {
+  if (!row.device || row.device === myDevice || !row.seen_at) return false;
+  return now - new Date(row.seen_at).getTime() < ORDER_ENTRY_STALE_MS;
+}

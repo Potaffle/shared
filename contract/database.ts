@@ -949,6 +949,30 @@ export type Database = {
         }
         Relationships: []
       }
+      order_entry_lock: {
+        Row: {
+          app: string | null
+          device: string | null
+          id: string
+          seen_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app?: string | null
+          device?: string | null
+          id?: string
+          seen_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app?: string | null
+          device?: string | null
+          id?: string
+          seen_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       order_lines: {
         Row: {
           components: Json
@@ -1675,6 +1699,10 @@ export type Database = {
       cash_tracking_from: { Args: { p_branch?: string }; Returns: string }
       check_admin_pin: { Args: { p_pin: string }; Returns: Json }
       check_points: { Args: { p_phone: string }; Returns: Json }
+      claim_order_entry: {
+        Args: { p_app: string; p_device: string; p_screen?: string }
+        Returns: Json
+      }
       close_cash_no_sales: {
         Args: { p_branch?: string; p_day?: string }
         Returns: Json
@@ -1770,6 +1798,10 @@ export type Database = {
       points_of: {
         Args: { p_customer: string; p_day?: string; p_skip_line?: string }
         Returns: Json
+      }
+      release_order_entry: {
+        Args: { p_device: string; p_screen?: string }
+        Returns: undefined
       }
       reopen_day: { Args: { p_branch?: string; p_day?: string }; Returns: Json }
       set_admin_pin: { Args: { p_pin: string }; Returns: undefined }
