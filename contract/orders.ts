@@ -76,6 +76,12 @@ export interface Order {
   source: 'counter' | 'qr';
   /** ISO timestamp the "order ready" WhatsApp message went out (orders.ready_sent_at); null = not yet. Set by notify-ready only. */
   readySentAt?: string | null;
+  /**
+   * The "order received" WhatsApp message (orders.received_msg, 2026-11-26): null = not tried (no phone, WhatsApp off
+   * or not configured, or create-order has not finished sending), 'sent', or 'failed' (the device that made the order
+   * offers Send again: notify-ready with kind 'received'). Set by the server only.
+   */
+  receivedMsg?: 'sent' | 'failed' | null;
 }
 
 export const lineTotal = (l: OrderLine) => l.qty * l.unit;
